@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherCore — Setup Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #111210;
+  --surface:  #1a1c18;
+  --surface2: #21231f;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --teal:     #00e5c3;
+  --teal-dim: rgba(0,229,195,0.10);
+  --amber:    #f5a623;
+  --red:      #ff5c5c;
+  --green:    #6dd68c;
+  --blue:     #5ca8ff;
+  --text:     #e8e6e1;
+  --muted:    #6b6e66;
+  --muted2:   #9c9f95;
+  --mono:     'Geist Mono', monospace;
+  --display:  'Cabinet Grotesk', sans-serif;
+  --serif:    'Instrument Serif', serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--display);
+  line-height: 1.6;
+}
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+/* ── LAYOUT ── */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+}
+
+/* ── HEADER ── */
+.header { margin-bottom: 3.5rem; }
+.eyebrow {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal);
+  margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.eyebrow::before { content:''; width:24px; height:1px; background:var(--teal); }
+h1 {
+  font-family: var(--display); font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800; letter-spacing: -0.02em; line-height: 1.1;
+  margin-bottom: 0.8rem;
+}
+h1 em { font-style: normal; color: var(--teal); }
+.subtitle {
+  font-family: var(--serif); font-style: italic;
+  font-size: 1.05rem; color: var(--muted2); max-width: 560px;
+}
+
+/* ── OS TABS ── */
+.os-tabs {
+  display: flex; gap: 4px; margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+}
+.os-tab {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.5rem 1.1rem; border-radius: 6px 6px 0 0;
+  border: 1px solid transparent; border-bottom: none;
+  cursor: pointer; color: var(--muted); transition: all 0.15s;
+  background: none; position: relative; bottom: -1px;
+}
+.os-tab:hover { color: var(--text); background: var(--surface); }
+.os-tab.active {
+  color: var(--teal); background: var(--surface);
+  border-color: var(--border); border-bottom-color: var(--surface);
+}
+
+/* ── OS PANELS ── */
+.os-panel { display: none; }
+.os-panel.active { display: block; }
+
+/* ── PHASE HEADER ── */
+.phase-block { margin-bottom: 2.5rem; }
+.phase-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.phase-title {
+  font-size: 1.15rem; font-weight: 800; margin-bottom: 0.25rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.phase-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--teal-dim); border: 1px solid rgba(0,229,195,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.65rem; color: var(--teal);
+  flex-shrink: 0;
+}
+.phase-desc {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.88rem; color: var(--muted2); margin-bottom: 1.2rem;
+}
+
+/* ── STEPS ── */
+.steps { display: flex; flex-direction: column; gap: 1px; }
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+}
+.step:first-child { border-radius: 10px 10px 0 0; }
+.step:last-child  { border-radius: 0 0 10px 10px; }
+.step:only-child  { border-radius: 10px; }
+.step-head {
+  padding: 0.85rem 1.2rem;
+  display: flex; align-items: flex-start; gap: 1rem;
+  cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.step-head:hover { background: var(--surface2); }
+.step-counter {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--teal); min-width: 20px; padding-top: 2px;
+  flex-shrink: 0;
+}
+.step-body-text { flex: 1; }
+.step-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.15rem; }
+.step-summary { font-family: var(--mono); font-size: 0.68rem; color: var(--muted2); }
+.step-toggle {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+  flex-shrink: 0; padding-top: 3px; transition: transform 0.2s;
+}
+.step.open .step-toggle { transform: rotate(180deg); }
+.step-content {
+  display: none;
+  padding: 0 1.2rem 1.2rem 1.2rem;
+  border-top: 1px solid var(--border);
+}
+.step.open .step-content { display: block; }
+.step-note {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.82rem; color: var(--muted2);
+  margin-bottom: 0.8rem; margin-top: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: #0a0c09;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0.7rem 0;
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,229,195,0.03);
+}
+.code-lang {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal);
+}
+.copy-btn {
+  font-family: var(--mono); font-size: 0.58rem; color: var(--muted);
+  background: none; border: 1px solid var(--border);
+  border-radius: 3px; padding: 0.1rem 0.5rem;
+  cursor: pointer; transition: all 0.15s;
+}
+.copy-btn:hover { color: var(--teal); border-color: rgba(0,229,195,0.3); }
+.copy-btn.copied { color: var(--green); border-color: rgba(109,214,140,0.3); }
+.code-body {
+  padding: 1rem 1.2rem;
+  font-family: var(--mono); font-size: 0.78rem;
+  line-height: 1.85; color: #a8b09e;
+  overflow-x: auto; white-space: pre;
+}
+.cm  { color: #3d5a3a; }
+.kw  { color: var(--teal); }
+.str { color: var(--green); }
+.val { color: var(--amber); }
+.err { color: var(--red); }
+.ok  { color: var(--green); }
+
+/* ── CALLOUTS ── */
+.callout {
+  border-radius: 8px; padding: 0.85rem 1.1rem;
+  margin: 0.8rem 0; font-size: 0.82rem; line-height: 1.65;
+  display: flex; gap: 0.7rem; align-items: flex-start;
+}
+.callout-icon { font-size: 0.9rem; flex-shrink: 0; padding-top: 1px; }
+.callout-body { flex: 1; }
+.callout-body strong {
+  display: block; font-size: 0.72rem; font-family: var(--mono);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.25rem;
+}
+.callout.info  { background: rgba(92,168,255,0.07); border: 1px solid rgba(92,168,255,0.2); color: #a0c4ff; }
+.callout.warn  { background: rgba(245,166,35,0.07); border: 1px solid rgba(245,166,35,0.2); color: #f5cc84; }
+.callout.ok    { background: rgba(109,214,140,0.07); border: 1px solid rgba(109,214,140,0.2); color: #a4e4b4; }
+.callout.err   { background: rgba(255,92,92,0.07);  border: 1px solid rgba(255,92,92,0.2);  color: #ffaaaa; }
+
+/* ── INLINE CODE ── */
+code {
+  font-family: var(--mono); font-size: 0.78em;
+  background: rgba(255,255,255,0.07); border-radius: 3px;
+  padding: 0.1em 0.4em; color: var(--teal);
+}
+
+/* ── DIVIDER ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* ── VERIFY TABLE ── */
+.verify-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: 0.72rem; margin: 0.8rem 0;
+}
+.verify-table th {
+  text-align: left; padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  background: rgba(0,229,195,0.05); color: var(--teal);
+  letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.6rem;
+}
+.verify-table td {
+  padding: 0.5rem 0.8rem; border: 1px solid var(--border);
+  color: var(--text); vertical-align: top;
+}
+.verify-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.check { color: var(--green); }
+.cross { color: var(--red); }
+
+/* ── FINAL BANNER ── */
+.final-banner {
+  background: var(--teal-dim);
+  border: 1px solid rgba(0,229,195,0.25);
+  border-radius: 12px; padding: 1.75rem 2rem;
+  margin-top: 3rem; text-align: center;
+}
+.final-banner h3 {
+  font-size: 1.1rem; font-weight: 800; color: var(--teal); margin-bottom: 0.4rem;
+}
+.final-banner p {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.9rem; color: var(--muted2);
+}
+.final-url {
+  font-family: var(--mono); font-size: 0.85rem;
+  color: var(--teal); margin-top: 0.8rem;
+  background: rgba(0,0,0,0.3); border-radius: 6px;
+  display: inline-block; padding: 0.4rem 1rem;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="eyebrow">WeatherCore — Setup Guide</div>
+    <h1>How to Run<br><em>the App for Real</em></h1>
+    <p class="subtitle">A complete step-by-step guide from a fresh machine to a live running dashboard — pick your operating system below.</p>
+  </div>
+
+  <!-- OS SELECTOR -->
+  <div class="os-tabs">
+    <button class="os-tab active" onclick="switchOS('ubuntu')">Ubuntu / Debian</button>
+    <button class="os-tab" onclick="switchOS('macos')">macOS</button>
+    <button class="os-tab" onclick="switchOS('windows')">Windows</button>
+  </div>
+
+  <!-- ════════════════════════════════════
+       UBUNTU
+       ════════════════════════════════════ -->
+  <div class="os-panel active" id="panel-ubuntu">
+
+    <!-- PHASE A -->
+    <div class="phase-block">
+      <div class="phase-label">Phase A</div>
+      <div class="phase-title"><div class="phase-num">A</div> Install System Dependencies</div>
+      <p class="phase-desc">Install Python, MySQL and Git if not already present.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">01</div>
+            <div class="step-body-text">
+              <div class="step-title">Update system & install Python 3.11+</div>
+              <div class="step-summary">apt update → install python3, pip, venv</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip python3-venv git -y
+
+<span class="cm"># Verify</span>
+python3 --version   <span class="cm"># should say Python 3.11+ or 3.12+</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">02</div>
+            <div class="step-body-text">
+              <div class="step-title">Install MySQL 8.0</div>
+              <div class="step-summary">Install MySQL server and run the security wizard</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">sudo apt install mysql-server -y
+sudo systemctl start mysql
+sudo systemctl enable mysql   <span class="cm"># auto-start on reboot</span>
+
+<span class="cm"># Run the security wizard — set a root password when prompted</span>
+sudo mysql_secure_installation</div>
+            </div>
+            <div class="callout info">
+              <div class="callout-icon">ℹ</div>
+              <div class="callout-body">
+                <strong>Security wizard prompts</strong>
+                Answer: MEDIUM password policy → Yes → Yes → Yes → Yes. This removes test databases and anonymous users.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE B -->
+    <div class="phase-block">
+      <div class="phase-label">Phase B</div>
+      <div class="phase-title"><div class="phase-num">B</div> Create the Database & User</div>
+      <p class="phase-desc">Create a dedicated MySQL user and database. Never use root for the app.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">03</div>
+            <div class="step-body-text">
+              <div class="step-title">Log into MySQL as root</div>
+              <div class="step-summary">sudo mysql (Ubuntu doesn't need a root password here)</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">sudo mysql</div>
+            </div>
+            <p class="step-note">You should see the <code>mysql></code> prompt. Now run the SQL commands below inside it.</p>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">04</div>
+            <div class="step-body-text">
+              <div class="step-title">Create database, user & grant permissions</div>
+              <div class="step-summary">Run inside the mysql> prompt</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — paste inside mysql> prompt</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="kw">CREATE DATABASE</span> weathercore
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+<span class="kw">CREATE USER</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>
+  IDENTIFIED BY <span class="str">'StrongPass!2025'</span>;
+
+<span class="kw">GRANT ALL PRIVILEGES ON</span> weathercore.* <span class="kw">TO</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>;
+
+FLUSH PRIVILEGES;
+EXIT;</div>
+            </div>
+            <div class="callout warn">
+              <div class="callout-icon">⚠</div>
+              <div class="callout-body">
+                <strong>Change the password</strong>
+                Replace <code>StrongPass!2025</code> with your own password. Use the same password in your <code>.env</code> file in the next phase.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">05</div>
+            <div class="step-body-text">
+              <div class="step-title">Run the schema file</div>
+              <div class="step-summary">Creates all 6 tables, views, stored procedure and seed data</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <p class="step-note">Navigate to the folder where you saved <code>schema.sql</code> and run:</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">mysql -u weatheruser -p weathercore < schema.sql
+<span class="cm"># Enter your password when prompted</span>
+
+<span class="cm"># You should see output like:</span>
+<span class="ok"># status   | stations_seeded | config_keys</span>
+<span class="ok"># ✓ Schema created: 8 tables/views | 8 | 15</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE C -->
+    <div class="phase-block">
+      <div class="phase-label">Phase C</div>
+      <div class="phase-title"><div class="phase-num">C</div> Set Up the Python Project</div>
+      <p class="phase-desc">Create a virtual environment and install all Python packages.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">06</div>
+            <div class="step-body-text">
+              <div class="step-title">Create project folder structure</div>
+              <div class="step-summary">One folder, two subfolders: backend files + frontend HTML</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">mkdir -p weathercore/frontend
+cd weathercore
+
+<span class="cm"># Move your downloaded files into place:</span>
+<span class="cm"># schema.sql      → weathercore/schema.sql</span>
+<span class="cm"># backend.py      → weathercore/backend.py</span>
+<span class="cm"># app.py          → weathercore/app.py</span>
+<span class="cm"># requirements.txt→ weathercore/requirements.txt</span>
+<span class="cm"># index.html      → weathercore/frontend/index.html</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">07</div>
+            <div class="step-body-text">
+              <div class="step-title">Create virtual environment & install packages</div>
+              <div class="step-summary">Isolated Python environment — keeps your system Python clean</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash — run from inside the weathercore/ folder</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">python3 -m venv venv
+source venv/bin/activate
+<span class="cm"># Your prompt now shows (venv) — this is correct</span>
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+<span class="cm"># This installs: flask, flask-cors, mysql-connector-python,</span>
+<span class="cm"># apscheduler, requests, python-dotenv, pandas</span>
+<span class="cm"># Takes about 1-2 minutes</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">08</div>
+            <div class="step-body-text">
+              <div class="step-title">Create your .env file</div>
+              <div class="step-summary">Copy the example and fill in your database password</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">cp env_example.txt .env
+nano .env   <span class="cm"># or use any text editor</span></div>
+            </div>
+            <p class="step-note">The only line you <strong>must</strong> change is <code>DB_PASS</code>. Set it to the password you used in Step 04. Everything else is optional.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">.env — minimum required changes</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">DB_HOST=localhost
+DB_USER=weatheruser
+<span class="kw">DB_PASS=StrongPass!2025</span>   <span class="cm"># ← change this to your actual password</span>
+DB_NAME=weathercore
+
+<span class="cm"># Optional — leave blank to skip OWM (Open-Meteo still works)</span>
+OWM_API_KEY=
+NOAA_TOKEN=
+
+FLASK_ENV=development
+PORT=5000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE D -->
+    <div class="phase-block">
+      <div class="phase-label">Phase D</div>
+      <div class="phase-title"><div class="phase-num">D</div> Run the App</div>
+      <p class="phase-desc">Start the Flask server — it also starts the background scheduler automatically.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">09</div>
+            <div class="step-body-text">
+              <div class="step-title">Start Flask</div>
+              <div class="step-summary">One command — serves API + dashboard + starts data polling</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash — from inside weathercore/ with venv active</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">python app.py</div>
+            </div>
+            <p class="step-note">You should see output like this — if you do, it's working:</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">expected terminal output</span></div>
+              <div class="code-body"><span class="ok">✓ MySQL connection pool created (size=5)</span>
+<span class="ok">  Alert engine loaded 5 threshold rules</span>
+<span class="ok">✓ Scheduler started</span>
+<span class="ok">  → Ingestion: every 15 minutes</span>
+<span class="ok">  → Summaries: daily at 00:05 UTC</span>
+<span class="ok">  → Thresholds: reload every 60 minutes</span>
+<span class="ok">═══ Starting ingestion cycle ═══</span>
+<span class="ok">  Active stations: 8</span>
+<span class="ok">  ✓ KE-NBO-001 open_meteo → 21.4°C obs_id=1</span>
+<span class="ok">  ✓ KE-MBA-001 open_meteo → 30.2°C obs_id=2</span>
+<span class="ok">  ✓ Running on http://0.0.0.0:5000</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">10</div>
+            <div class="step-body-text">
+              <div class="step-title">Open the dashboard</div>
+              <div class="step-summary">Visit in your browser</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">browser</span></div>
+              <div class="code-body">http://localhost:5000</div>
+            </div>
+            <div class="callout ok">
+              <div class="callout-icon">✓</div>
+              <div class="callout-body">
+                <strong>You should see</strong>
+                The dark WeatherCore dashboard loading with real station data. The map shows markers for all 8 stations. KPI cards show live temperature, humidity, wind and UV readings. Charts populate as soon as the first 15-minute fetch completes.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end ubuntu panel -->
+
+
+  <!-- ════════════════════════════════════
+       MACOS
+       ════════════════════════════════════ -->
+  <div class="os-panel" id="panel-macos">
+
+    <div class="phase-block">
+      <div class="phase-label">Phase A</div>
+      <div class="phase-title"><div class="phase-num">A</div> Install System Dependencies</div>
+      <p class="phase-desc">Use Homebrew — the standard macOS package manager.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">01</div>
+            <div class="step-body-text">
+              <div class="step-title">Install Homebrew (if not installed)</div>
+              <div class="step-summary">The macOS package manager — one paste into Terminal</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash — Terminal.app</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">02</div>
+            <div class="step-body-text">
+              <div class="step-title">Install Python 3.11 and MySQL 8.0</div>
+              <div class="step-summary">Two brew commands</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">brew install python@3.11 mysql git
+
+<span class="cm"># Start MySQL and set it to auto-start</span>
+brew services start mysql
+
+<span class="cm"># Secure the installation (set root password)</span>
+mysql_secure_installation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-label">Phase B</div>
+      <div class="phase-title"><div class="phase-num">B</div> Create the Database & User</div>
+      <p class="phase-desc">Log in as root and create the app's dedicated user.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">03</div>
+            <div class="step-body-text">
+              <div class="step-title">Log into MySQL and create user + database</div>
+              <div class="step-summary">mysql -u root -p then paste the SQL block</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">mysql -u root -p</div>
+            </div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — paste at mysql> prompt</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="kw">CREATE DATABASE</span> weathercore
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+<span class="kw">CREATE USER</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>
+  IDENTIFIED BY <span class="str">'StrongPass!2025'</span>;
+
+<span class="kw">GRANT ALL PRIVILEGES ON</span> weathercore.* <span class="kw">TO</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>;
+FLUSH PRIVILEGES;
+EXIT;</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">04</div>
+            <div class="step-body-text">
+              <div class="step-title">Run the schema</div>
+              <div class="step-summary">Creates tables, views, stored procedure, seed data</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">mysql -u weatheruser -p weathercore < schema.sql</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-label">Phase C + D</div>
+      <div class="phase-title"><div class="phase-num">C</div> Python Setup & Run</div>
+      <p class="phase-desc">Same as Ubuntu from here — virtual environment, .env, then python app.py.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">05</div>
+            <div class="step-body-text">
+              <div class="step-title">Create venv, install packages, configure .env, run</div>
+              <div class="step-summary">Four commands</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash — from inside weathercore/</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="cm"># 1. Create and activate virtual environment</span>
+python3.11 -m venv venv
+source venv/bin/activate
+
+<span class="cm"># 2. Install packages</span>
+pip install --upgrade pip
+pip install -r requirements.txt
+
+<span class="cm"># 3. Create .env from the example</span>
+cp env_example.txt .env
+nano .env   <span class="cm"># set DB_PASS to your MySQL password</span>
+
+<span class="cm"># 4. Run schema</span>
+mysql -u weatheruser -p weathercore < schema.sql
+
+<span class="cm"># 5. Start the app</span>
+python app.py</div>
+            </div>
+            <div class="callout ok">
+              <div class="callout-icon">✓</div>
+              <div class="callout-body">
+                <strong>Open dashboard</strong>
+                Visit <code>http://localhost:5000</code> in your browser.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end macos panel -->
+
+
+  <!-- ════════════════════════════════════
+       WINDOWS
+       ════════════════════════════════════ -->
+  <div class="os-panel" id="panel-windows">
+
+    <div class="phase-block">
+      <div class="phase-label">Phase A</div>
+      <div class="phase-title"><div class="phase-num">A</div> Install System Dependencies</div>
+      <p class="phase-desc">Download and install Python, MySQL and Git from their official installers.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">01</div>
+            <div class="step-body-text">
+              <div class="step-title">Install Python 3.11</div>
+              <div class="step-summary">Download the Windows installer — tick "Add to PATH"</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <p class="step-note">Download from <code>https://www.python.org/downloads/</code></p>
+            <div class="callout warn">
+              <div class="callout-icon">⚠</div>
+              <div class="callout-body">
+                <strong>Critical checkbox</strong>
+                On the first installer screen, tick <strong>"Add Python to PATH"</strong> before clicking Install Now. If you miss this, Python won't be found in the terminal.
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">powershell — verify after install</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body">python --version   <span class="cm"># should show Python 3.11.x or 3.12.x</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">02</div>
+            <div class="step-body-text">
+              <div class="step-title">Install MySQL 8.0 via MySQL Installer</div>
+              <div class="step-summary">Download the MSI installer — choose Developer Default</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <p class="step-note">Download from <code>https://dev.mysql.com/downloads/installer/</code> — choose the larger "Windows (x86, 32-bit), MSI Installer".</p>
+            <div class="callout info">
+              <div class="callout-icon">ℹ</div>
+              <div class="callout-body">
+                <strong>Installer steps</strong>
+                Setup type → Developer Default → Execute → set root password when asked → Finish. Write down your root password — you'll need it in the next step.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-label">Phase B</div>
+      <div class="phase-title"><div class="phase-num">B</div> Create Database & User</div>
+      <p class="phase-desc">Open MySQL Workbench (installed with MySQL) or use the command line.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">03</div>
+            <div class="step-body-text">
+              <div class="step-title">Open MySQL Command Line Client and run setup SQL</div>
+              <div class="step-summary">Start Menu → MySQL → MySQL 8.0 Command Line Client</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — paste at mysql> prompt</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="kw">CREATE DATABASE</span> weathercore
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+<span class="kw">CREATE USER</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>
+  IDENTIFIED BY <span class="str">'StrongPass!2025'</span>;
+
+<span class="kw">GRANT ALL PRIVILEGES ON</span> weathercore.* <span class="kw">TO</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>;
+FLUSH PRIVILEGES;
+EXIT;</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">04</div>
+            <div class="step-body-text">
+              <div class="step-title">Run schema.sql from PowerShell</div>
+              <div class="step-summary">Navigate to your project folder and import the schema</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">powershell</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="cm"># cd into the folder where schema.sql is saved, then:</span>
+mysql -u weatheruser -p weathercore < schema.sql</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-label">Phase C + D</div>
+      <div class="phase-title"><div class="phase-num">C</div> Python Setup & Run</div>
+      <p class="phase-desc">Virtual environment on Windows uses <code>Scripts\activate</code> instead of <code>bin/activate</code>.</p>
+
+      <div class="steps">
+        <div class="step open">
+          <div class="step-head" onclick="toggleStep(this)">
+            <div class="step-counter">05</div>
+            <div class="step-body-text">
+              <div class="step-title">Create venv, install, configure, run</div>
+              <div class="step-summary">Open PowerShell in the weathercore folder</div>
+            </div>
+            <div class="step-toggle">▾</div>
+          </div>
+          <div class="step-content">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">powershell</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+              <div class="code-body"><span class="cm"># 1. Create virtual environment</span>
+python -m venv venv
+venv\Scripts\activate
+<span class="cm"># Prompt now shows (venv) — this is correct</span>
+
+<span class="cm"># 2. Install packages</span>
+pip install --upgrade pip
+pip install -r requirements.txt
+
+<span class="cm"># 3. Create .env</span>
+copy env_example.txt .env
+notepad .env   <span class="cm"># set DB_PASS to your password, save and close</span>
+
+<span class="cm"># 4. Start the app</span>
+python app.py</div>
+            </div>
+            <div class="callout ok">
+              <div class="callout-icon">✓</div>
+              <div class="callout-body">
+                <strong>Open dashboard</strong>
+                Visit <code>http://localhost:5000</code> in your browser.
+              </div>
+            </div>
+            <div class="callout warn">
+              <div class="callout-icon">⚠</div>
+              <div class="callout-body">
+                <strong>PowerShell execution policy</strong>
+                If you get a "scripts cannot be run" error when activating venv, run this first:
+                <code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end windows panel -->
+
+
+  <!-- ════════════════════════════════════
+       SHARED: TROUBLESHOOTING
+       ════════════════════════════════════ -->
+  <hr>
+
+  <div class="phase-block">
+    <div class="phase-label">Troubleshooting</div>
+    <div class="phase-title"><div class="phase-num">?</div> Common Errors & Fixes</div>
+
+    <table class="verify-table">
+      <thead>
+        <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Access denied for user 'weatheruser'</code></td>
+          <td>Wrong password in <code>.env</code></td>
+          <td>Open <code>.env</code>, make sure <code>DB_PASS</code> matches exactly what you set in Step 04</td>
+        </tr>
+        <tr>
+          <td><code>Unknown database 'weathercore'</code></td>
+          <td>Schema not imported yet</td>
+          <td>Re-run <code>mysql -u weatheruser -p weathercore &lt; schema.sql</code></td>
+        </tr>
+        <tr>
+          <td><code>ModuleNotFoundError: No module named 'flask'</code></td>
+          <td>Virtual env not activated</td>
+          <td>Run <code>source venv/bin/activate</code> (Linux/Mac) or <code>venv\Scripts\activate</code> (Windows) before <code>python app.py</code></td>
+        </tr>
+        <tr>
+          <td><code>Address already in use — port 5000</code></td>
+          <td>Another process on port 5000</td>
+          <td>Run <code>export PORT=5001</code> then <code>python app.py</code>, visit <code>localhost:5001</code></td>
+        </tr>
+        <tr>
+          <td>Dashboard shows "Offline" red dot</td>
+          <td>Flask is not running</td>
+          <td>Switch back to the terminal and check for error messages. Re-run <code>python app.py</code></td>
+        </tr>
+        <tr>
+          <td>Charts are empty after 15 minutes</td>
+          <td>API fetch failed</td>
+          <td>Check terminal for <code>open_meteo failed</code> lines. Verify internet connection. Open-Meteo requires no key so should always work.</td>
+        </tr>
+        <tr>
+          <td><code>mysql: command not found</code> (Windows)</td>
+          <td>MySQL not in PATH</td>
+          <td>Add <code>C:\Program Files\MySQL\MySQL Server 8.0\bin</code> to your Windows PATH environment variable</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- VERIFY CHECKLIST -->
+  <div class="phase-block">
+    <div class="phase-label">Final Verification</div>
+    <div class="phase-title"><div class="phase-num">✓</div> Confirm Everything Works</div>
+    <p class="phase-desc">Test each API endpoint directly to confirm the full stack is healthy.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">browser address bar — open each URL to verify</span></div>
+      <div class="code-body"><span class="cm"># Should return a JSON list of 8 stations:</span>
+http://localhost:5000/api/stations
+
+<span class="cm"># Should return latest readings for all stations:</span>
+http://localhost:5000/api/current
+
+<span class="cm"># Should return history for station 1 (empty if &lt;15min old):</span>
+http://localhost:5000/api/station/1/history?hours=24
+
+<span class="cm"># Should return system stats including scheduler job times:</span>
+http://localhost:5000/api/system/stats
+
+<span class="cm"># Should return [] (no alerts yet) or any active alerts:</span>
+http://localhost:5000/api/alerts/active</div>
+    </div>
+  </div>
+
+  <!-- FINAL BANNER -->
+  <div class="final-banner">
+    <h3>🌤 You're live</h3>
+    <p>The scheduler is polling all 8 stations every 15 minutes via Open-Meteo. Data fills in automatically — no further action needed.</p>
+    <div class="final-url">http://localhost:5000</div>
+  </div>
+
+</div><!-- end page -->
+
+<script>
+// ── OS Switcher ──────────────────────────────────────────────
+function switchOS(os) {
+  document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + os).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Accordion ────────────────────────────────────────────────
+function toggleStep(head) {
+  const step = head.closest('.step');
+  step.classList.toggle('open');
+}
+
+// ── Copy buttons ─────────────────────────────────────────────
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('.code-body');
+  // Strip HTML tags to get plain text
+  const text = code.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>

@@ -87,10 +87,11 @@ class DatabaseManager:
         self._pool = pooling.MySQLConnectionPool(
             pool_name="weathercore_pool",
             pool_size=5,
-            host=os.getenv("MYSQLHOST", "localhost"),
-            user=os.getenv("MYSQLUSER", "weatheruser"),
-            password=os.getenv("MYSQLPASSWORD", "12345678"),
-            database=os.getenv("MYSQLDATABASE", "gwdc"),
+            host=os.getenv("MYSQLHOST"),
+            user=os.getenv("MYSQLUSER"),
+            password=os.getenv("MYSQLPASSWORD"),
+            database=os.getenv("MYSQLDATABASE"),
+            port=int(os.getenv("MYSQLPORT", 3306)),
             charset="utf8mb4",
             autocommit=False,
             time_zone="+00:00",           # Always UTC in DB
@@ -773,6 +774,7 @@ def create_components():
     summariser    = Summariser(db)
     scheduler     = WeatherScheduler(fetcher, alert_engine, summariser)
     return db, fetcher, alert_engine, summariser, scheduler
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════

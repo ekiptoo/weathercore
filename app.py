@@ -32,6 +32,14 @@ from flask_cors import CORS
 
 from backend import create_components
 
+components = None
+
+def get_components():
+    global components
+    if components is None:
+        components = create_components()
+    return components
+
 # ─── App setup ────────────────────────────────────────────────────────────
 log = logging.getLogger("weathercore.api")
 
@@ -43,7 +51,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
 # ─── Initialise backend components ────────────────────────────────────────
-db, fetcher, alert_engine, summariser, scheduler = create_components()
+db, fetcher, alert_engine, summariser, scheduler = get_components()
 scheduler.start(run_immediately=True)
 atexit.register(scheduler.stop)
 

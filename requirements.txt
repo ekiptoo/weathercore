@@ -2,6 +2,7 @@
 # Install: pip install -r requirements.txt
 
 flask==3.1.3
+gunicorn==25.3.0
 flask-cors==6.0.0
 mysql-connector-python==9.3.0
 apscheduler==3.10.4
@@ -9,9 +10,9 @@ requests==2.33.0
 python-dotenv==1.2.2
 pandas==3.0.2
 
-# Optional — Redis caching (Phase 5)
-# redis==5.0.8
+# Redis caching
+redis==5.0.8
 
-# Optional — ML prediction (Phase 5)
+# ML prediction
 # scikit-learn==1.5.0
 # numpy==2.0.0

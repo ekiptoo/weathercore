@@ -4,14 +4,23 @@ import os
 
 load_dotenv()
 
+#
+# def get_connection():
+#     return mysql.connector.connect(
+#         host=os.getenv("DB_HOST", "localhost"),
+#         user=os.getenv("DB_USER", "weatheruser"),
+#         password=os.getenv("DB_PASS"),
+#         database=os.getenv("DB_NAME", "weathercore"),
+#         autocommit=False
+#     )
 
-def get_connection():
+def get_db_connection():
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        user=os.getenv("DB_USER", "weatheruser"),
-        password=os.getenv("DB_PASS"),
-        database=os.getenv("DB_NAME", "weathercore"),
-        autocommit=False
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MQSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT", 3306))
     )
 
 def insert_observation(conn, station_id, data: dict):

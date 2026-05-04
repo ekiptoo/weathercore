@@ -14,7 +14,7 @@ load_dotenv()
 #         autocommit=False
 #     )
 
-def get_db_connection():
+def get_connection():
     return mysql.connector.connect(
         host=os.getenv("MYSQLHOST"),
         user=os.getenv("MQSQLUSER"),

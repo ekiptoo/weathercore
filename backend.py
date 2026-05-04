@@ -69,14 +69,28 @@ class DatabaseManager:
         db.insert_observation(station_id=1, data={...})
     """
 
+    # def __init__(self):
+    #     self._pool = pooling.MySQLConnectionPool(
+    #         pool_name="weathercore_pool",
+    #         pool_size=5,
+    #         host=os.getenv("DB_HOST", "localhost"),
+    #         user=os.getenv("DB_USER", "weatheruser"),
+    #         password=os.getenv("DB_PASS", "12345678"),
+    #         database=os.getenv("DB_NAME", "gwdc"),
+    #         charset="utf8mb4",
+    #         autocommit=False,
+    #         time_zone="+00:00",  # Always UTC in DB
+    #         connection_timeout=10,
+    #     )
+    #     log.info("✓ MySQL connection pool created (size=5)")
     def __init__(self):
         self._pool = pooling.MySQLConnectionPool(
             pool_name="weathercore_pool",
             pool_size=5,
-            host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "weatheruser"),
-            password=os.getenv("DB_PASS", "12345678"),
-            database=os.getenv("DB_NAME", "gwdc"),
+            host=os.getenv("MYSQLHOST", "localhost"),
+            user=os.getenv("MYSQLUSER", "weatheruser"),
+            password=os.getenv("MYSQLPASSWORD", "12345678"),
+            database=os.getenv("MYSQLDATABASE", "gwdc"),
             charset="utf8mb4",
             autocommit=False,
             time_zone="+00:00",           # Always UTC in DB

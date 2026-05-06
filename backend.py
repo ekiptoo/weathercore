@@ -89,7 +89,7 @@ class DatabaseManager:
             pool_size=5,
             host=os.getenv("MYSQLHOST"),
             user=os.getenv("MYSQLUSER"),
-            password=os.getenv("MYSQLPASSWORD"),
+            password=os.getenv("MYSQL_ROOT_PASSWORD"),
             database=os.getenv("MYSQLDATABASE"),
             port=int(os.getenv("MYSQLPORT", 3306)),
             charset="utf8mb4",

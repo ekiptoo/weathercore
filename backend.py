@@ -91,7 +91,7 @@ class DatabaseManager:
             user=os.getenv("MYSQLUSER"),
             password=os.getenv("MYSQL_ROOT_PASSWORD"),
             database=os.getenv("MYSQLDATABASE"),
-            port=int(os.getenv("MYSQLPORT", 3306)),
+            port=int(os.getenv("MYSQLPORT")or 3306),
             charset="utf8mb4",
             autocommit=False,
             time_zone="+00:00",           # Always UTC in DB

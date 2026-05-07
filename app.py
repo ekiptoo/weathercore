@@ -26,8 +26,8 @@ from backend import create_components
 log = logging.getLogger("weathercore.api")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
-
+# FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+FRONTEND_DIR = BASE_DIR
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 

@@ -125,14 +125,43 @@ body{background:var(--bg);color:var(--text);font-family:var(--display);min-heigh
   display:flex;
   flex-direction:column;
   flex-shrink:0;
-  will-change: transform;
-  touch-action: pan-y;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.sidebar.open{
-  opacity: 1;
-  transform: translateX(0);
+
+@media(max-width:860px){
+  .app-body{grid-template-columns:1fr;}
+  .sidebar{
+    display:flex !important;
+    opacity: 0;
+    transform: translateX(-100%);
+    transition:
+      transform 0.25s cubic-bezier(.22,.60,.36,1),
+      opacity 0.25s ease;
+    will-change: transform;
+    touch-action: pan-y;
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+
+  .sidebar.open{
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .drawer-mobile-head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background:rgba(26,28, 24, 0.9);
+    backdrop-filter:blur(10px);
+    z-index: 5;
+  }
 }
 .drawer-handle{
   position: absolute;
@@ -144,6 +173,39 @@ body{background:var(--bg);color:var(--text);font-family:var(--display);min-heigh
   border-radius: 0 8px 8px 0;
   background:rgba(255,255,255,0.08);
 }
+
+.drawer-mobile-head{
+  display:none;
+}
+
+.drawer-title{
+  font-family:var(--mono);
+  font-size:0.7rem;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--teal);
+}
+
+.drawer-close-btn{
+  width:28px;
+  height:28px;
+  border:none;
+  border-radius:6px;
+  background:var(--surface2);
+  color:var(--text);
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  transition:all 0.2s ease;
+}
+
+.drawer-close-btn:hover{
+  background:var(--surface3);
+}
+
 .sb-section{border-bottom:1px solid var(--border);padding:0.75rem;}
 .sb-head{
   font-family:var(--mono);font-size:0.56rem;font-weight:500;
@@ -402,11 +464,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 /* ════════════════════════════════
    RESPONSIVE
    ════════════════════════════════ */
-@media(max-width:860px){
-  .app-body{grid-template-columns:1fr;}
-  .sidebar{display:flex !important;}
-  .grid-2,.grid-3{grid-template-columns:1fr;}
-}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 .fade-in{animation:fadeUp 0.35s ease backwards;}
 
@@ -442,11 +500,19 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 /* MOBILE */
 @media(max-width: 860px){
   .mobile-menu-btn{
-    display: flex;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
     justify-content: center;
   }
-
+  .mobile-menu-btn span{
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text);
+    transition: 0.25s;
+  }
   .app-body{
     grid-template-columns: 1fr;
   }
@@ -460,13 +526,11 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
     height: calc(100vh - var(--topbar-h) - var(--navbar-h));
     z-index: 400;
 
-    transform: translateX(-100%);
-    transition: transform 0.28s ease;
+    transform: translateX(calc(-100% + 12px));
 
     box-shadow: 8px 0 40px rgba(0,0,0,0.45);
 
     opacity: 0;
-    transform:translateX(-100%);
     transition:
           transform 0.25s cubic-bezier(0.25, 0.6, 0.3, 1),
           opacity 0.25s ease;
@@ -477,8 +541,38 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
     opacity: 1;
   }
 
+  .sidebar::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,0.13);
+  }
+
   .main-content{
     width: 100%;
+  }
+
+  .drawer-mobile-head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .drawer-title{
+    font-family:var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+}
+@media(max-width: 860px) and (orientation:landscape){
+
+  .sidebar{
+    width: 260px;
   }
 }
 </style>
@@ -494,7 +588,11 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class = "mobile-menu-btn" onclick= "openDrawer()">☰</button>
+  <button class = "mobile-menu-btn" onclick= "openDrawer()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="logo">Weather<span>Core</span></div>
   <div class="topbar-right">
     <div class="topbar-status">
@@ -524,6 +622,13 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
        ══════════════════════════ -->
   <div class = "drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
   <aside class="sidebar" id="mobile-drawer">
+    <!-- Swipe Handle -->
+    <div class="drawer-handle"></div>
+    <!-- Mobile Drawer Header -->
+    <div class = 'drawer-mobile-head'>
+      <div class = 'drawer-title'>Tracked Cities</div>
+      <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+    </div>
 
     <!-- City search -->
     <div class="sb-section">

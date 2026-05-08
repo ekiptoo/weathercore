@@ -52,7 +52,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--display);min-heigh
   backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;
-  padding:0 1.25rem;gap:1rem;
+  padding:0 1.25rem;
+  gap:1rem;
+  padding-top: env(safe-area-inset-top);
 }
 .logo{font-family:var(--mono);font-size:0.8rem;font-weight:600;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;}
 .logo span{color:var(--muted2);}
@@ -115,9 +117,37 @@ body{background:var(--bg);color:var(--text);font-family:var(--display);min-heigh
   height:calc(100vh - var(--topbar-h) - var(--navbar-h));
   overflow-y:auto;
   border-right:1px solid var(--border);
-  background:var(--surface);
-  display:flex;flex-direction:column;
+  /* background:var(--surface); */
+  background: rgba(26, 28, 24, 0.88);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-right: 1px solid rgba(255, 255,255,0.08);
+  display:flex;
+  flex-direction:column;
   flex-shrink:0;
+  will-change: transform;
+  touch-action: pan-y;
+  opacity: 0;
+  transform:translateX(-100%);
+  transition:
+          transform 0.25s cubic-bezier(0.25, 0.6, 0.3, 1),
+          opacity 0.25s ease;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sider.open{
+  opacity: 1;
+  transform: translateX(0);
+}
+.drawer-handle{
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 70px;
+  border-radius: 0 8px 0;
+  background:rgba(255,255,255,0.08);
 }
 .sb-section{border-bottom:1px solid var(--border);padding:0.75rem;}
 .sb-head{
@@ -384,6 +414,71 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 .fade-in{animation:fadeUp 0.35s ease backwards;}
+
+.mobile-menu-btn{
+  display: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  background:var(--surface2);
+  color:var(--text);
+  font-size:1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.drawer-overlay{
+  position: fixed;
+  inset: 0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(3px);
+  z-index: 350;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.drawer-overlay.open{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* MOBILE */
+@media(max-width: 860px){
+  .mobile-menu-btn{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-body{
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar{
+    display: flex;
+    position:fixed;
+    top: calc(var(--topbar-h) + var(--navbar-h));
+    left: 0;
+    width:min(82vw, 320px);
+    height: calc(100vh - var(--topbar-h) - var(--navbar-h));
+    z-index: 400;
+
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+
+    box-shadow: 8px 0 40px rgba(0,0,0,0.45);
+  }
+
+  .sidebar.open{
+    transform: translateX(0);
+  }
+
+  .main-content{
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -397,6 +492,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 
 <!-- TOPBAR -->
 <div class="topbar">
+  <button class = "mobile-menu-btn" onclick= "openDrawer()">☰</button>
   <div class="logo">Weather<span>Core</span></div>
   <div class="topbar-right">
     <div class="topbar-status">
@@ -424,7 +520,8 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
   <!-- ══════════════════════════
        SIDEBAR
        ══════════════════════════ -->
-  <aside class="sidebar">
+  <div class = "drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <aside class="sidebar" id="mobile-drawer">
 
     <!-- City search -->
     <div class="sb-section">
@@ -805,6 +902,34 @@ function switchPage(id, el){
   if(id==='alerts')    renderAlertsPage();
 }
 
+// =================================================
+// SWIPE GESTURES
+// =================================================
+
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', e=>{
+  touchStartX = e.changedTouches[0].screenX;
+
+});
+
+document.addEventListener('touchend', e=>{
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+});
+
+function handleSwipe() {
+  // swipe right -> open
+  if (touchStartX < 40 && touchEndX - touchStartX > 70) {
+    openDrawer();
+  }
+
+  // swipe left -> close
+  if (touchStartX - touchEndX > 70) {
+    closeDrawer();
+  }
+}
 // ═══════════════════════════════════════════════════════════════
 // API HELPERS
 // ═══════════════════════════════════════════════════════════════
@@ -883,6 +1008,9 @@ async function addCityFromSearch(i){
 // ═══════════════════════════════════════════════════════════════
 function selectCity(id){
   S.activeId = id;
+  if (window.innerWidth <= 860) {
+    closeDrawer();
+  }
   renderTrackedList();
   const city = S.cities.find(c=>c.station_id===id);
   if(!city) return;
@@ -1737,6 +1865,23 @@ async function boot(){
     loadingEl.style.display='none';
     setStatus(false);
   }
+}
+
+// ====================================================================
+// MOBILE DRAWER
+// ====================================================================
+
+const drawer = document.getElementById('mobile-drawer');
+const overlay = document.getElementById('drawer-overlay');
+
+function openDrawer() {
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+}
+
+function closeDrawer() {
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
 }
 
 boot();

@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherCore — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --bg:        #111210;
+  --surface:   #1a1c18;
+  --surface2:  #21231f;
+  --surface3:  #282b25;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.13);
+  --teal:      #00e5c3;
+  --teal-dim:  rgba(0,229,195,0.12);
+  --teal-mid:  rgba(0,229,195,0.22);
+  --amber:     #f5a623;
+  --red:       #ff5c5c;
+  --blue:      #5ca8ff;
+  --green:     #6dd68c;
+  --violet:    #b87ef5;
+  --text:      #e8e6e1;
+  --muted:     #6b6e66;
+  --muted2:    #8c9085;
+  --mono:      'Geist Mono', monospace;
+  --display:   'Cabinet Grotesk', sans-serif;
+  --serif:     'Instrument Serif', serif;
+  --sidebar-w: 260px;
+  --topbar-h:  50px;
+  --navbar-h:  42px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:14px;}
+body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ════════════════════════════════
+   TOPBAR
+   ════════════════════════════════ */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  height:var(--topbar-h);
+  background:rgba(17,18,16,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 1.25rem;gap:1rem;
+}
+.logo{font-family:var(--mono);font-size:0.8rem;font-weight:600;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;}
+.logo span{color:var(--muted2);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:0.75rem;}
+.topbar-time{font-family:var(--mono);font-size:0.68rem;color:var(--muted2);}
+.topbar-status{display:flex;align-items:center;gap:0.4rem;font-family:var(--mono);font-size:0.62rem;color:var(--muted);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.status-dot.error{background:var(--red);animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.btn-sm{font-family:var(--mono);font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(0,229,195,0.25);border-radius:5px;padding:0.28rem 0.7rem;cursor:pointer;transition:all 0.2s;}
+.btn-sm:hover{background:var(--teal);color:var(--bg);}
+.btn-sm:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ════════════════════════════════
+   PAGE NAV TABS (below topbar)
+   ════════════════════════════════ */
+.page-nav{
+  position:fixed;top:var(--topbar-h);left:0;right:0;z-index:290;
+  height:var(--navbar-h);
+  background:rgba(17,18,16,0.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;
+  padding:0 1.25rem;
+  overflow-x:auto;
+}
+.page-nav::-webkit-scrollbar{display:none;}
+.nav-tab{
+  font-family:var(--mono);font-size:0.65rem;font-weight:500;
+  letter-spacing:0.08em;text-transform:uppercase;
+  padding:0 1rem;
+  border-bottom:2px solid transparent;
+  cursor:pointer;color:var(--muted);
+  white-space:nowrap;flex-shrink:0;
+  display:flex;align-items:center;gap:0.4rem;
+  transition:color 0.15s,border-color 0.15s;
+}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+.nav-tab.soon{opacity:0.45;cursor:default;}
+.nav-tab.soon:hover{color:var(--muted);}
+.soon-badge{font-size:0.52rem;padding:0.1rem 0.3rem;border-radius:3px;background:rgba(184,126,245,0.15);color:var(--violet);border:1px solid rgba(184,126,245,0.25);}
+
+/* ════════════════════════════════
+   BODY LAYOUT: sidebar + main
+   ════════════════════════════════ */
+.app-body{
+  margin-top:calc(var(--topbar-h) + var(--navbar-h));
+  display:grid;
+  grid-template-columns:var(--sidebar-w) 1fr;
+  min-height:calc(100vh - var(--topbar-h) - var(--navbar-h));
+}
+
+/* ════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════ */
+.sidebar{
+  position:sticky;
+  top:calc(var(--topbar-h) + var(--navbar-h));
+  height:calc(100vh - var(--topbar-h) - var(--navbar-h));
+  overflow-y:auto;
+  border-right:1px solid var(--border);
+  background:var(--surface);
+  display:flex;flex-direction:column;
+  flex-shrink:0;
+}
+.sb-section{border-bottom:1px solid var(--border);padding:0.75rem;}
+.sb-head{
+  font-family:var(--mono);font-size:0.56rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:0.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+/* City search in sidebar */
+.sb-search{position:relative;margin-bottom:0.5rem;}
+.sb-search input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:0.38rem 0.75rem 0.38rem 1.8rem;
+  font-family:var(--mono);font-size:0.68rem;color:var(--text);outline:none;
+  transition:border-color 0.2s;
+}
+.sb-search input:focus{border-color:rgba(0,229,195,0.3);}
+.sb-search input::placeholder{color:var(--muted);}
+.sb-search-icon{position:absolute;left:0.55rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.75rem;pointer-events:none;}
+.search-drop{
+  position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:400;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.6);overflow:hidden;display:none;
+}
+.search-drop.open{display:block;}
+.sd-item{
+  padding:0.5rem 0.75rem;font-family:var(--mono);font-size:0.68rem;
+  cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s;
+  display:flex;flex-direction:column;gap:0.1rem;
+}
+.sd-item:last-child{border-bottom:none;}
+.sd-item:hover{background:var(--surface3);}
+.sd-item-name{color:var(--text);}
+.sd-item-sub{font-size:0.6rem;color:var(--muted);}
+/* Tracked cities list */
+.tracked-list{display:flex;flex-direction:column;}
+.tracked-item{
+  padding:0.6rem 0.75rem;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.15s;
+  display:flex;align-items:center;gap:0.6rem;
+}
+.tracked-item:hover{background:var(--surface2);}
+.tracked-item.active{background:var(--teal-dim);border-left:2px solid var(--teal);}
+.tracked-item.compare-on{border-left:2px solid var(--amber);}
+.ti-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ti-info{flex:1;min-width:0;}
+.ti-name{font-size:0.75rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ti-country{font-family:var(--mono);font-size:0.58rem;color:var(--muted);}
+.ti-temp{font-family:var(--mono);font-size:0.82rem;font-weight:500;color:var(--teal);flex-shrink:0;}
+.ti-actions{display:flex;gap:3px;flex-shrink:0;}
+.ti-btn{
+  width:18px;height:18px;border-radius:3px;border:1px solid var(--border);
+  background:none;cursor:pointer;font-size:0.6rem;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+}
+.ti-btn:hover{border-color:var(--border2);color:var(--text);}
+.ti-btn.compare-active{background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.3);color:var(--amber);}
+.ti-btn.remove:hover{background:rgba(255,92,92,0.15);border-color:rgba(255,92,92,0.3);color:var(--red);}
+/* Sidebar alerts */
+.sb-alert-list{overflow-y:auto;max-height:180px;}
+.sb-alert{padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);display:flex;gap:0.5rem;align-items:flex-start;}
+.sb-alert-type{font-family:var(--mono);font-size:0.56rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;}
+.sb-alert-type.warning{color:var(--amber);}
+.sb-alert-type.emergency{color:var(--red);}
+.sb-alert-msg{font-size:0.66rem;color:var(--muted2);line-height:1.35;margin-top:1px;word-break:break-word;}
+.sb-alert-time{font-family:var(--mono);font-size:0.56rem;color:var(--muted);margin-top:2px;}
+.no-data{padding:0.75rem;font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-align:center;}
+
+/* ════════════════════════════════
+   MAIN CONTENT
+   ════════════════════════════════ */
+.main-content{
+  overflow-y:auto;
+  min-height:calc(100vh - var(--topbar-h) - var(--navbar-h));
+}
+.page{display:none;padding:1.25rem;}
+.page.active{display:block;}
+
+/* ════════════════════════════════
+   SHARED COMPONENTS
+   ════════════════════════════════ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.card-head{
+  padding:0.75rem 1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;
+}
+.card-title{font-family:var(--mono);font-size:0.6rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);}
+.card-body{padding:1rem;}
+.section-title{font-family:var(--serif);font-style:italic;font-size:1.5rem;color:var(--text);margin-bottom:0.25rem;}
+.section-sub{font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1.25rem;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.75rem;}
+/* Range pill selector */
+.range-row{display:flex;gap:3px;flex-wrap:wrap;}
+.rpill{
+  font-family:var(--mono);font-size:0.58rem;font-weight:500;
+  letter-spacing:0.06em;text-transform:uppercase;
+  padding:0.22rem 0.55rem;border-radius:4px;
+  border:1px solid transparent;cursor:pointer;color:var(--muted);background:none;
+  transition:all 0.15s;
+}
+.rpill:hover{border-color:var(--border2);color:var(--text);}
+.rpill.active{background:var(--teal-dim);border-color:rgba(0,229,195,0.3);color:var(--teal);}
+/* Chart expand button */
+.expand-btn{
+  font-family:var(--mono);font-size:0.6rem;color:var(--muted);
+  background:none;border:1px solid var(--border);border-radius:4px;
+  padding:0.15rem 0.45rem;cursor:pointer;transition:all 0.15s;
+  flex-shrink:0;
+}
+.expand-btn:hover{border-color:var(--border2);color:var(--text);}
+/* KPI strip */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem;margin-bottom:1rem;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.85rem;position:relative;overflow:hidden;}
+.kpi-label{font-family:var(--mono);font-size:0.55rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.35rem;}
+.kpi-val{font-family:var(--mono);font-size:1.25rem;font-weight:500;color:var(--text);line-height:1;}
+.kpi-unit{font-size:0.62rem;color:var(--muted);}
+.kpi-sub{font-family:var(--mono);font-size:0.58rem;color:var(--muted);margin-top:0.2rem;}
+.kpi-bar{position:absolute;bottom:0;left:0;height:2px;border-radius:0 1px 0 0;transition:width 0.8s;}
+
+/* ════════════════════════════════
+   CHART MODAL (expand)
+   ════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:2rem;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  width:100%;max-width:900px;max-height:90vh;overflow:auto;
+}
+.modal-head{
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-title{font-family:var(--mono);font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);}
+.modal-close{font-family:var(--mono);font-size:0.65rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:0.2rem 0.55rem;cursor:pointer;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:1.25rem;}
+.modal-chart-wrap{position:relative;height:340px;}
+
+/* ════════════════════════════════
+   PAGE 1 — OVERVIEW (Quick View)
+   ════════════════════════════════ */
+.hero-row{display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:start;margin-bottom:1rem;}
+.hero-city{font-family:var(--serif);font-style:italic;font-size:clamp(1.6rem,3vw,2.6rem);color:var(--text);line-height:1;}
+.hero-temp{font-family:var(--serif);font-style:italic;font-size:clamp(3.5rem,7vw,5.5rem);color:var(--text);line-height:1;letter-spacing:-0.03em;}
+.hero-temp sup{font-size:0.35em;vertical-align:super;color:var(--muted);}
+.hero-cond{font-family:var(--mono);font-size:0.72rem;color:var(--muted2);margin-top:0.3rem;}
+.hero-right{text-align:right;}
+.hero-icon{font-size:3.5rem;line-height:1;margin-bottom:0.5rem;}
+.hero-updated{font-family:var(--mono);font-size:0.58rem;color:var(--muted);}
+.chart-wrap{position:relative;}
+.chart-wrap canvas{display:block;}
+
+/* ════════════════════════════════
+   PAGE 2 — COMPARE
+   ════════════════════════════════ */
+.compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.25rem;}
+.city-compare-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.ccc-head{padding:0.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.6rem;}
+.ccc-badge{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ccc-name{font-family:var(--mono);font-size:0.68rem;font-weight:500;color:var(--text);}
+.ccc-country{font-family:var(--mono);font-size:0.58rem;color:var(--muted);}
+.ccc-temp{font-family:var(--serif);font-style:italic;font-size:2rem;color:var(--text);padding:0.75rem 1rem 0;}
+.ccc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.75rem 1rem;}
+.ccc-m{display:flex;flex-direction:column;gap:0.15rem;}
+.ccc-ml{font-family:var(--mono);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);}
+.ccc-mv{font-family:var(--mono);font-size:0.75rem;color:var(--text);}
+.compare-table-wrap{overflow-x:auto;margin-bottom:1rem;}
+table.ct{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:0.7rem;}
+table.ct th{padding:0.6rem 0.85rem;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;font-size:0.58rem;cursor:pointer;user-select:none;}
+table.ct th:hover{color:var(--text);}
+table.ct th.sorted{color:var(--teal);}
+table.ct td{padding:0.65rem 0.85rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+table.ct tr:last-child td{border-bottom:none;}
+table.ct tr:hover td{background:rgba(255,255,255,0.02);}
+.row-hot td{border-left:2px solid var(--red);}
+.row-cold td{border-left:2px solid var(--blue);}
+.temp-tag{display:inline-flex;align-items:center;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.7rem;font-weight:500;}
+.tt-hot{background:rgba(255,92,92,0.14);color:var(--red);}
+.tt-warm{background:rgba(245,166,35,0.14);color:var(--amber);}
+.tt-mild{background:rgba(0,229,195,0.1);color:var(--teal);}
+.tt-cool{background:rgba(92,168,255,0.14);color:var(--blue);}
+
+/* ════════════════════════════════
+   PAGE 3 — HISTORICAL
+   ════════════════════════════════ */
+.hist-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem;margin-bottom:1rem;}
+.hist-stat{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.85rem;}
+.hs-label{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;}
+.hs-value{font-family:var(--serif);font-style:italic;font-size:1.6rem;color:var(--text);line-height:1;}
+.hs-note{font-family:var(--mono);font-size:0.58rem;color:var(--muted2);margin-top:0.2rem;}
+.hist-chart-block{margin-bottom:1rem;}
+
+/* ════════════════════════════════
+   PAGE 4 — ALERTS
+   ════════════════════════════════ */
+.alerts-list-full{display:flex;flex-direction:column;gap:0.75rem;}
+.alert-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;display:flex;gap:0.85rem;align-items:flex-start;}
+.alert-card.emergency{border-left:3px solid var(--red);}
+.alert-card.warning{border-left:3px solid var(--amber);}
+.alert-card.watch{border-left:3px solid var(--blue);}
+.alert-icon-big{font-size:1.4rem;flex-shrink:0;line-height:1;}
+.alert-content{flex:1;min-width:0;}
+.alert-row1{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;flex-wrap:wrap;}
+.alert-sev{font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;}
+.alert-sev.emergency{color:var(--red);}
+.alert-sev.warning{color:var(--amber);}
+.alert-sev.watch{color:var(--blue);}
+.alert-station{font-family:var(--mono);font-size:0.6rem;color:var(--muted);}
+.alert-msg-full{font-size:0.78rem;color:var(--text);line-height:1.5;}
+.alert-meta{font-family:var(--mono);font-size:0.58rem;color:var(--muted);margin-top:0.3rem;}
+.alert-actions{display:flex;gap:0.4rem;flex-shrink:0;}
+.btn-resolve{font-family:var(--mono);font-size:0.6rem;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:4px;padding:0.25rem 0.6rem;cursor:pointer;transition:all 0.15s;}
+.btn-resolve:hover{border-color:var(--green);color:var(--green);}
+
+/* Threshold config */
+.threshold-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.75rem;margin-top:1.25rem;}
+.threshold-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.85rem;}
+.tc-name{font-family:var(--mono);font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:0.6rem;}
+.tc-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;}
+.tc-label{font-family:var(--mono);font-size:0.58rem;color:var(--muted);min-width:70px;}
+.tc-input{
+  background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+  padding:0.2rem 0.5rem;font-family:var(--mono);font-size:0.68rem;color:var(--text);
+  width:70px;outline:none;transition:border-color 0.15s;
+}
+.tc-input:focus{border-color:rgba(0,229,195,0.3);}
+.tc-unit{font-family:var(--mono);font-size:0.58rem;color:var(--muted);}
+
+/* ════════════════════════════════
+   PAGES 5 & 6 — COMING SOON
+   ════════════════════════════════ */
+.coming-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:1rem;text-align:center;}
+.coming-icon{width:64px;height:64px;border-radius:50%;background:rgba(184,126,245,0.1);border:1px solid rgba(184,126,245,0.25);display:flex;align-items:center;justify-content:center;font-size:1.6rem;}
+.coming-title{font-family:var(--serif);font-style:italic;font-size:2rem;color:var(--text);}
+.coming-desc{font-family:var(--mono);font-size:0.7rem;color:var(--muted);max-width:400px;line-height:1.7;}
+.coming-feats{display:flex;flex-direction:column;gap:0.4rem;max-width:360px;width:100%;margin-top:0.5rem;}
+.coming-feat{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:0.6rem 0.85rem;font-family:var(--mono);font-size:0.68rem;color:var(--muted2);text-align:left;display:flex;align-items:center;gap:0.6rem;}
+.coming-feat::before{content:'○';color:var(--violet);flex-shrink:0;}
+
+/* ════════════════════════════════
+   LOADING SCREEN
+   ════════════════════════════════ */
+.loading-overlay{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+.loading-logo{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--teal);letter-spacing:0.15em;text-transform:uppercase;}
+.loading-bar{width:180px;height:2px;background:var(--border2);border-radius:1px;overflow:hidden;}
+.loading-bar-fill{height:100%;background:var(--teal);animation:loadfill 1.6s ease-in-out infinite;}
+@keyframes loadfill{0%{width:0%;margin-left:0;}50%{width:55%;margin-left:22%;}100%{width:0%;margin-left:100%;}}
+.loading-msg{font-family:var(--mono);font-size:0.62rem;color:var(--muted);}
+
+/* ════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════ */
+@media(max-width:860px){
+  .app-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.fade-in{animation:fadeUp 0.35s ease backwards;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">WeatherCore</div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  <div class="loading-msg" id="loading-msg">Initialising…</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Weather<span>Core</span></div>
+  <div class="topbar-right">
+    <div class="topbar-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Live</span>
+    </div>
+    <div class="topbar-time" id="clock"></div>
+    <button class="btn-sm" id="btn-fetch" onclick="fetchNow()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- PAGE NAV -->
+<nav class="page-nav">
+  <div class="nav-tab active"  data-page="overview"  onclick="switchPage('overview',this)">Overview</div>
+  <div class="nav-tab"         data-page="compare"   onclick="switchPage('compare',this)">Compare</div>
+  <div class="nav-tab"         data-page="historical" onclick="switchPage('historical',this)">Historical</div>
+  <div class="nav-tab"         data-page="alerts"    onclick="switchPage('alerts',this)">Alerts <span id="alert-badge" style="display:none;margin-left:3px;background:rgba(255,92,92,0.2);color:var(--red);font-size:0.5rem;padding:0.1rem 0.3rem;border-radius:3px;"></span></div>
+  <div class="nav-tab soon"    data-page="analytics">Analytics <span class="soon-badge">Soon</span></div>
+  <div class="nav-tab soon"    data-page="ml">ML Predictions <span class="soon-badge">Phase 5</span></div>
+</nav>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- ══════════════════════════
+       SIDEBAR
+       ══════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- City search -->
+    <div class="sb-section">
+      <div class="sb-head">Tracked Cities <span id="city-count" style="color:var(--teal)"></span></div>
+      <div class="sb-search">
+        <span class="sb-search-icon">⌕</span>
+        <input id="city-search" type="text" placeholder="Add city…"
+          oninput="handleCitySearch(this.value)"
+          onkeydown="handleSearchKey(event)"
+          autocomplete="off">
+        <div class="search-drop" id="search-drop"></div>
+      </div>
+      <div class="tracked-list" id="tracked-list"></div>
+    </div>
+
+    <!-- Active alerts -->
+    <div class="sb-section">
+      <div class="sb-head">Active Alerts</div>
+      <div class="sb-alert-list" id="sb-alert-list">
+        <div class="no-data">No active alerts</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════
+       MAIN CONTENT
+       ══════════════════════════ -->
+  <div class="main-content">
+
+    <!-- ── PAGE: OVERVIEW ── -->
+    <div class="page active" id="page-overview">
+      <!-- Hero current conditions -->
+      <div class="card fade-in" style="margin-bottom:1rem;">
+        <div class="card-head">
+          <span class="card-title">Current Conditions</span>
+          <span id="ov-updated" style="font-family:var(--mono);font-size:0.58rem;color:var(--muted);"></span>
+        </div>
+        <div class="card-body">
+          <div class="hero-row" id="hero-row">
+            <div>
+              <div style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.3rem;" id="hero-location">—</div>
+              <div class="hero-city" id="hero-city">Select a city</div>
+              <div class="hero-cond" id="hero-cond">—</div>
+              <div class="hero-temp" id="hero-temp">—<sup>°C</sup></div>
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);margin-top:0.3rem;" id="hero-feels"></div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-icon" id="hero-icon">🌡️</div>
+              <div class="hero-updated" id="hero-time"></div>
+            </div>
+          </div>
+          <!-- KPI strip -->
+          <div class="kpi-strip" id="kpi-strip"></div>
+        </div>
+      </div>
+
+      <!-- Overview charts -->
+      <div class="grid-2 fade-in">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Temperature trend</span>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <div class="range-row" id="ov-range"></div>
+              <button class="expand-btn" onclick="expandChart('ov-temp','Temperature Trend')">⤢</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:150px;"><canvas id="ov-temp-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Precipitation & Humidity</span>
+            <button class="expand-btn" onclick="expandChart('ov-prec','Precipitation & Humidity')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:150px;"><canvas id="ov-prec-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Wind Speed</span>
+            <button class="expand-btn" onclick="expandChart('ov-wind','Wind Speed')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:140px;"><canvas id="ov-wind-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Station Map</span></div>
+          <div style="height:190px;"><div id="map" style="height:100%;border-radius:0 0 10px 10px;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: COMPARE ── -->
+    <div class="page" id="page-compare">
+      <div class="section-title">City Comparison</div>
+      <div class="section-sub">Select cities in the sidebar — click ⊕ to add to compare view</div>
+
+      <!-- City comparison cards -->
+      <div class="compare-grid" id="compare-cards"></div>
+
+      <!-- Comparison charts -->
+      <div class="grid-2" style="margin-bottom:1rem;">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Temperature comparison</span>
+            <button class="expand-btn" onclick="expandChart('cmp-temp','Temperature Comparison')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:180px;"><canvas id="cmp-temp-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Humidity comparison</span>
+            <button class="expand-btn" onclick="expandChart('cmp-hum','Humidity Comparison')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:180px;"><canvas id="cmp-hum-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sortable table -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">Side-by-side metrics</span></div>
+        <div class="compare-table-wrap">
+          <table class="ct">
+            <thead><tr>
+              <th onclick="sortTable('name')">City ↕</th>
+              <th onclick="sortTable('temp')" class="sorted">Temp ↕</th>
+              <th onclick="sortTable('feels')">Feels Like ↕</th>
+              <th onclick="sortTable('hum')">Humidity ↕</th>
+              <th onclick="sortTable('wind')">Wind ↕</th>
+              <th onclick="sortTable('pres')">Pressure ↕</th>
+              <th>Condition</th>
+            </tr></thead>
+            <tbody id="compare-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: HISTORICAL ── -->
+    <div class="page" id="page-historical">
+      <div class="section-title">Historical Data</div>
+      <div class="section-sub" id="hist-city-label">Select a city from the sidebar</div>
+
+      <!-- Stats row -->
+      <div class="hist-stat-row" id="hist-stats"></div>
+
+      <!-- Controls -->
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <div class="range-row" id="hist-range"></div>
+        <div style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);">Showing:
+          <span id="hist-range-label" style="color:var(--teal);">Last 24 hours</span>
+        </div>
+      </div>
+
+      <!-- Temperature chart -->
+      <div class="hist-chart-block">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Temperature (°C)</span>
+            <button class="expand-btn" onclick="expandChart('hist-temp','Temperature History')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:180px;"><canvas id="hist-temp-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Precipitation chart -->
+      <div class="hist-chart-block">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Precipitation (mm)</span>
+            <button class="expand-btn" onclick="expandChart('hist-prec','Precipitation History')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:160px;"><canvas id="hist-prec-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wind chart -->
+      <div class="hist-chart-block">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Wind Speed (m/s)</span>
+            <button class="expand-btn" onclick="expandChart('hist-wind','Wind Speed History')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:160px;"><canvas id="hist-wind-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Humidity chart -->
+      <div class="hist-chart-block">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Humidity (%)</span>
+            <button class="expand-btn" onclick="expandChart('hist-hum','Humidity History')">⤢</button>
+          </div>
+          <div class="card-body" style="padding-top:0.5rem;">
+            <div class="chart-wrap" style="height:160px;"><canvas id="hist-hum-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: ALERTS ── -->
+    <div class="page" id="page-alerts">
+      <div class="section-title">Alerts & Notifications</div>
+      <div class="section-sub">Active threshold breaches across all tracked cities</div>
+
+      <div class="alerts-list-full" id="alerts-full"></div>
+
+      <!-- Threshold configuration -->
+      <div style="margin-top:1.5rem;">
+        <div style="font-family:var(--mono);font-size:0.62rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:0.75rem;">Configure Thresholds</div>
+        <div class="threshold-grid" id="threshold-grid"></div>
+        <div style="margin-top:0.75rem;">
+          <button class="btn-sm" onclick="saveThresholds()">Save Thresholds</button>
+          <span id="thresh-saved" style="font-family:var(--mono);font-size:0.6rem;color:var(--green);margin-left:0.75rem;display:none;">Saved ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: ANALYTICS (coming) ── -->
+    <div class="page" id="page-analytics">
+      <div class="coming-wrap">
+        <div class="coming-icon">◉</div>
+        <div class="coming-title">Analytics</div>
+        <p class="coming-desc">Deep statistical analysis — averages, extremes, trend indicators, anomaly detection.</p>
+        <div class="coming-feats">
+          <div class="coming-feat">Average temperature per city over configurable periods</div>
+          <div class="coming-feat">All-time historical extremes (min/max/records)</div>
+          <div class="coming-feat">Trend indicators — rising, falling, stable</div>
+          <div class="coming-feat">Precipitation frequency and intensity distribution</div>
+          <div class="coming-feat">Pressure anomaly detection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: ML (coming) ── -->
+    <div class="page" id="page-ml">
+      <div class="coming-wrap">
+        <div class="coming-icon">◌</div>
+        <div class="coming-title">ML Predictions</div>
+        <p class="coming-desc">Machine learning models trained on historical observations for 24–72h forecasts.</p>
+        <div class="coming-feats">
+          <div class="coming-feat">scikit-learn regression for temperature forecasting</div>
+          <div class="coming-feat">Precipitation probability estimation</div>
+          <div class="coming-feat">72-hour ahead custom predictions</div>
+          <div class="coming-feat">Model confidence intervals and uncertainty bands</div>
+          <div class="coming-feat">Weekly automatic model retraining via cron</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end app-body -->
+
+<!-- CHART EXPAND MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-title"></span>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="range-row" id="modal-range"></div>
+        <button class="modal-close" onclick="closeModal()">✕ Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-chart-wrap"><canvas id="modal-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG & CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const API      = 'http://localhost:5000/api';
+const OM       = 'https://api.open-meteo.com/v1';
+const GEO      = 'https://geocoding-api.open-meteo.com/v1';
+const REFRESH  = 60_000;
+
+const WMO = {
+  0:{e:'☀️',l:'Clear sky'},1:{e:'🌤️',l:'Mainly clear'},2:{e:'⛅',l:'Partly cloudy'},
+  3:{e:'☁️',l:'Overcast'},45:{e:'🌫️',l:'Fog'},48:{e:'🌫️',l:'Icy fog'},
+  51:{e:'🌦️',l:'Light drizzle'},53:{e:'🌦️',l:'Moderate drizzle'},55:{e:'🌧️',l:'Dense drizzle'},
+  61:{e:'🌧️',l:'Slight rain'},63:{e:'🌧️',l:'Moderate rain'},65:{e:'🌧️',l:'Heavy rain'},
+  71:{e:'🌨️',l:'Slight snow'},73:{e:'❄️',l:'Moderate snow'},75:{e:'❄️',l:'Heavy snow'},
+  80:{e:'🌦️',l:'Slight showers'},81:{e:'🌧️',l:'Showers'},82:{e:'⛈️',l:'Violent showers'},
+  95:{e:'⛈️',l:'Thunderstorm'},96:{e:'⛈️',l:'Thunderstorm+hail'},
+};
+const wmo = c => WMO[c] || {e:'🌡️',l:'Unknown'};
+
+const CITY_COLORS = ['#00e5c3','#5ca8ff','#f5a623','#ff5c5c','#6dd68c','#b87ef5','#f55c8a','#5cf5e5'];
+
+Chart.defaults.color = '#6b6e66';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.family = "'Geist Mono', monospace";
+Chart.defaults.font.size = 10;
+
+const CD = { // chart defaults
+  responsive:true, maintainAspectRatio:false,
+  animation:{duration:500},
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{display:false},
+    tooltip:{
+      backgroundColor:'#21231f', borderColor:'rgba(255,255,255,0.1)', borderWidth:1,
+      padding:9, cornerRadius:6,
+      titleFont:{family:"'Geist Mono',monospace",size:10},
+      bodyFont:{family:"'Geist Mono',monospace",size:10},
+    }
+  },
+  scales:{
+    x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{maxTicksLimit:7,maxRotation:0}},
+    y:{grid:{color:'rgba(255,255,255,0.04)'}},
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const S = {
+  // Tracked cities: {station_id,station_code,station_name,city,country,latitude,longitude,...,weather,history,inCompare}
+  cities: [],
+  activeId: null,          // station_id of selected city
+  compareIds: new Set(),   // station_ids selected for compare
+  alerts: [],
+  charts: {},              // keyed chartId → Chart instance
+  histRange: 24,           // hours
+  ovRange:   24,
+  searchRes: [],
+  searchTimer: null,
+  sortKey: 'temp',
+  sortDir: -1,
+  mapInst: null,
+  mapMarkers: {},
+  modalChartId: null,      // which chart is expanded
+  thresholds: {
+    heat_warn:35, heat_emerg:42,
+    cold_warn:0,  cold_emerg:-10,
+    wind_warn:15, wind_emerg:25,
+    rain_warn:10, rain_emerg:30,
+    uv_warn:7,    uv_emerg:10,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════════════
+setInterval(()=>{
+  document.getElementById('clock').textContent =
+    new Date().toUTCString().slice(5,22)+' UTC';
+},1000);
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function switchPage(id, el){
+  if(!el || el.classList.contains('soon')) return;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='compare')   renderComparePage();
+  if(id==='historical') renderHistoricalPage();
+  if(id==='alerts')    renderAlertsPage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function apiFetch(path){
+  const r = await fetch(API+path);
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function apiPost(path){
+  const r = await fetch(API+path,{method:'POST'});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CITY SEARCH (Open-Meteo geocoding)
+// ═══════════════════════════════════════════════════════════════
+function handleCitySearch(q){
+  clearTimeout(S.searchTimer);
+  const dd = document.getElementById('search-drop');
+  if(q.length<2){dd.classList.remove('open');return;}
+  S.searchTimer = setTimeout(async()=>{
+    try{
+      const r = await fetch(`${GEO}/search?name=${encodeURIComponent(q)}&count=7&language=en&format=json`);
+      S.searchRes = (await r.json()).results||[];
+      dd.innerHTML = S.searchRes.map((c,i)=>`
+        <div class="sd-item" onclick="addCityFromSearch(${i})">
+          <span class="sd-item-name">${c.name}</span>
+          <span class="sd-item-sub">${c.admin1||''}, ${c.country||''}</span>
+        </div>`).join('') || '<div class="sd-item"><span class="sd-item-sub">No results</span></div>';
+      dd.classList.add('open');
+    }catch(e){dd.classList.remove('open');}
+  },280);
+}
+
+function handleSearchKey(e){
+  if(e.key==='Escape') document.getElementById('search-drop').classList.remove('open');
+  if(e.key==='Enter' && S.searchRes.length) addCityFromSearch(0);
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.sb-search')) document.getElementById('search-drop').classList.remove('open');
+});
+
+async function addCityFromSearch(i){
+  const r = S.searchRes[i];
+  document.getElementById('city-search').value='';
+  document.getElementById('search-drop').classList.remove('open');
+  // Check if already tracked
+  const exists = S.cities.find(c=>c.city===r.name && c.country===r.country_code);
+  if(exists){selectCity(exists.station_id);return;}
+  // Create a city object (station_id = synthetic negative for demo/direct mode)
+  const city = {
+    station_id: -(Date.now()), // synthetic id until Flask provides one
+    station_code: `${r.country_code}-${r.name.slice(0,3).toUpperCase()}`,
+    station_name: r.name,
+    city: r.name,
+    country: r.country_code||'',
+    latitude: r.latitude,
+    longitude: r.longitude,
+    elevation_m: r.elevation||0,
+    timezone: r.timezone||'UTC',
+    source_api: 'open_meteo',
+    weather: null,
+    history: {},
+    inCompare: false,
+  };
+  S.cities.push(city);
+  await loadCityWeather(city);
+  renderTrackedList();
+  selectCity(city.station_id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CITY MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function selectCity(id){
+  S.activeId = id;
+  renderTrackedList();
+  const city = S.cities.find(c=>c.station_id===id);
+  if(!city) return;
+  renderOverviewHero(city);
+  loadAndRenderOverviewCharts(city, S.ovRange);
+  if(S.mapInst) S.mapInst.flyTo([city.latitude,city.longitude],7,{duration:0.8});
+  if(S.mapMarkers[id]) S.mapMarkers[id].openPopup();
+  // If historical page is open, re-render
+  if(document.getElementById('page-historical').classList.contains('active'))
+    renderHistoricalPage();
+}
+
+function removeCity(id, e){
+  e.stopPropagation();
+  S.cities = S.cities.filter(c=>c.station_id!==id);
+  S.compareIds.delete(id);
+  if(S.activeId===id) S.activeId = S.cities.length?S.cities[0].station_id:null;
+  renderTrackedList();
+  if(S.activeId) selectCity(S.activeId);
+  renderComparePageIfActive();
+}
+
+function toggleCompare(id, e){
+  e.stopPropagation();
+  if(S.compareIds.has(id)) S.compareIds.delete(id);
+  else S.compareIds.add(id);
+  renderTrackedList();
+  renderComparePageIfActive();
+}
+
+function renderComparePageIfActive(){
+  if(document.getElementById('page-compare').classList.contains('active'))
+    renderComparePage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRACKED CITY LIST (sidebar)
+// ═══════════════════════════════════════════════════════════════
+function renderTrackedList(){
+  document.getElementById('city-count').textContent = `(${S.cities.length})`;
+  const el = document.getElementById('tracked-list');
+  if(!S.cities.length){el.innerHTML='<div class="no-data">Search to add cities</div>';return;}
+  el.innerHTML = S.cities.map((c,ci)=>{
+    const w = c.weather;
+    const t = w?.temperature_c!=null ? w.temperature_c : (w?.temperature_2m!=null?w.temperature_2m:null);
+    const alertLvl = getAlertLevel(c.station_id);
+    const dotColor = alertLvl==='emergency'?'var(--red)':alertLvl==='warning'?'var(--amber)':'var(--green)';
+    const isActive = c.station_id===S.activeId;
+    const isCmp    = S.compareIds.has(c.station_id);
+    return `<div class="tracked-item ${isActive?'active':''} ${isCmp&&!isActive?'compare-on':''}"
+      onclick="selectCity(${c.station_id})">
+      <div class="ti-dot" style="background:${CITY_COLORS[ci%CITY_COLORS.length]};"></div>
+      <div class="ti-info">
+        <div class="ti-name">${c.city}</div>
+        <div class="ti-country">${c.country}${c.elevation_m?' · '+c.elevation_m+'m':''}</div>
+      </div>
+      <div class="ti-temp">${t!=null?Number(t).toFixed(1)+'°':'—'}</div>
+      <div class="ti-actions">
+        <button class="ti-btn ${isCmp?'compare-active':''}" title="Toggle compare"
+          onclick="toggleCompare(${c.station_id},event)">⊕</button>
+        <button class="ti-btn remove" title="Remove" onclick="removeCity(${c.station_id},event)">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getAlertLevel(stationId){
+  const a = S.alerts.find(a=>a.station_id===stationId);
+  if(!a) return 'normal';
+  return a.severity||'watch';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERTS SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+function renderSidebarAlerts(){
+  const el = document.getElementById('sb-alert-list');
+  const badge = document.getElementById('alert-badge');
+  if(!S.alerts.length){
+    el.innerHTML='<div class="no-data">✓ No active alerts</div>';
+    badge.style.display='none';
+    return;
+  }
+  badge.style.display='';
+  badge.textContent=S.alerts.length;
+  const icons={heat:'🔥',cold:'❄️',wind:'💨',flood:'🌊',uv:'☀️',storm:'⛈️',rain:'🌧️'};
+  el.innerHTML = S.alerts.map(a=>`
+    <div class="sb-alert">
+      <div>
+        <div class="sb-alert-type ${a.severity}">${a.alert_type||a.type||'alert'} · ${a.severity}</div>
+        <div class="sb-alert-msg">${(a.station_name||a.station||'')}: ${a.message}</div>
+        <div class="sb-alert-time">${a.triggered_at?timeAgo(a.triggered_at):''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function timeAgo(iso){
+  const d=(Date.now()-new Date(iso))/1000;
+  if(d<60)return'just now';
+  if(d<3600)return`${Math.floor(d/60)}m ago`;
+  return`${Math.floor(d/3600)}h ago`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════════════════════════
+function initMap(){
+  if(S.mapInst) return;
+  S.mapInst = L.map('map',{center:[0,20],zoom:3,zoomControl:false,attributionControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(S.mapInst);
+}
+
+function updateMapMarkers(){
+  Object.values(S.mapMarkers).forEach(m=>S.mapInst.removeLayer(m));
+  S.mapMarkers={};
+  S.cities.forEach((c,ci)=>{
+    if(!c.latitude) return;
+    const w = c.weather;
+    const t = w?.temperature_c??w?.temperature_2m;
+    const level = getAlertLevel(c.station_id);
+    const color = level==='emergency'?'#ff5c5c':level==='warning'?'#f5a623':CITY_COLORS[ci%CITY_COLORS.length];
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="width:30px;height:30px;border-radius:50%;background:${color};border:2px solid #111210;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:0.52rem;font-weight:600;color:#111;box-shadow:0 0 10px ${color}55;cursor:pointer;">${t!=null?Math.round(Number(t))+'°':'?'}</div>`,
+      iconSize:[30,30],iconAnchor:[15,15]
+    });
+    const w2=wmo(w?.weather_code);
+    const marker = L.marker([c.latitude,c.longitude],{icon})
+      .addTo(S.mapInst)
+      .bindPopup(`<div style="font-family:'Geist Mono',monospace;font-size:11px;line-height:1.7;">
+        <strong>${c.city}, ${c.country}</strong><br>
+        🌡 ${t!=null?Number(t).toFixed(1):'—'}°C &nbsp; 💧 ${w?.humidity_pct??w?.relative_humidity_2m??'—'}%<br>
+        💨 ${(w?.wind_speed_ms??w?.wind_speed_10m??'—')} m/s<br>
+        ${w2.e} ${w2.l}
+      </div>`,{maxWidth:200});
+    marker.on('click',()=>selectCity(c.station_id));
+    S.mapMarkers[c.station_id]=marker;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WEATHER FETCHING (Flask first, Open-Meteo fallback)
+// ═══════════════════════════════════════════════════════════════
+// Fetch with timeout so a single slow request never blocks boot
+async function fetchWithTimeout(url, ms=8000){
+  const ctrl=new AbortController();
+  const id=setTimeout(()=>ctrl.abort(),ms);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(id);
+    if(!r.ok) throw new Error(r.status);
+    return await r.json();
+  }catch(e){clearTimeout(id);throw e;}
+}
+
+async function loadCityWeather(city){
+  // Try Flask first
+  try{
+    const all=await fetchWithTimeout(`${API}/current`,4000);
+    const match=all.find(s=>
+      s.station_id===city.station_id||
+      s.station_name===city.city||
+      s.city===city.city
+    );
+    if(match){city.weather=match;return;}
+  }catch(e){}
+  // Open-Meteo fallback
+  try{
+    const vars=['temperature_2m','apparent_temperature','relative_humidity_2m',
+      'surface_pressure','wind_speed_10m','wind_direction_10m','precipitation',
+      'cloud_cover','uv_index','weather_code','wind_gusts_10m','visibility'].join(',');
+    const d=await fetchWithTimeout(
+      `${OM}/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=${vars}&wind_speed_unit=ms&timezone=UTC`,
+      7000
+    );
+    city.weather=d.current||d;
+  }catch(e){
+    // Both failed — use demo data so the UI still loads
+    city.weather=getDemoWeather(city);
+  }
+}
+
+async function loadCityHistory(city, hours){
+  const key=`h${hours}`;
+  if(city.history[key]&&city.history[key].time.length>1) return; // already cached
+  // Try Flask
+  try{
+    const rows=await fetchWithTimeout(`${API}/station/${city.station_id}/history?hours=${hours}`,4000);
+    if(rows&&rows.length>1){city.history[key]=normaliseHistory(rows,'flask');return;}
+  }catch(e){}
+  // Open-Meteo fallback
+  try{
+    const end=new Date(),start=new Date(end-hours*3600000);
+    const fmt=d=>d.toISOString().split('T')[0];
+    const url=`${OM}/forecast?latitude=${city.latitude}&longitude=${city.longitude}`+
+      `&hourly=temperature_2m,precipitation,wind_speed_10m,relative_humidity_2m`+
+      `&wind_speed_unit=ms&timezone=UTC&start_date=${fmt(start)}&end_date=${fmt(end)}`;
+    const d=await fetchWithTimeout(url,8000);
+    if(d&&d.hourly&&d.hourly.time){
+      const cutoff=start.toISOString().slice(0,16);
+      const idx=Math.max(0,d.hourly.time.findIndex(t=>t>=cutoff));
+      const sl=arr=>(arr||[]).slice(idx);
+      city.history[key]={
+        time:sl(d.hourly.time).map(t=>new Date(t+'Z')),
+        temp:sl(d.hourly.temperature_2m),
+        prec:sl(d.hourly.precipitation),
+        wind:sl(d.hourly.wind_speed_10m),
+        hum:sl(d.hourly.relative_humidity_2m),
+      };
+      return;
+    }
+  }catch(e){}
+  // Final fallback: generated demo data
+  city.history[key]=generateDemoHistory(city,hours);
+}
+
+function normaliseHistory(rows,source){
+  return{
+    time:rows.map(r=>new Date(r.observed_at||r.time)),
+    temp:rows.map(r=>r.temperature_c??r.temperature_2m??null),
+    prec:rows.map(r=>r.precipitation_mm??r.precipitation??0),
+    wind:rows.map(r=>r.wind_speed_ms??r.wind_speed_10m??null),
+    hum:rows.map(r=>r.humidity_pct??r.relative_humidity_2m??null),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERT ENGINE (client-side)
+// ═══════════════════════════════════════════════════════════════
+function runAlertEngine(){
+  const T=S.thresholds;
+  const newAlerts=[];
+  S.cities.forEach(city=>{
+    const w=city.weather;
+    if(!w) return;
+    const checks=[
+      {type:'heat',  field:'temperature_c',   field2:'temperature_2m',  op:'gt',warn:T.heat_warn, emerg:T.heat_emerg, icon:'🔥'},
+      {type:'cold',  field:'temperature_c',   field2:'temperature_2m',  op:'lt',warn:T.cold_warn, emerg:T.cold_emerg, icon:'❄️'},
+      {type:'wind',  field:'wind_speed_ms',   field2:'wind_speed_10m',  op:'gt',warn:T.wind_warn, emerg:T.wind_emerg, icon:'💨'},
+      {type:'rain',  field:'precipitation_mm',field2:'precipitation',   op:'gt',warn:T.rain_warn, emerg:T.rain_emerg, icon:'🌧️'},
+      {type:'uv',    field:'uv_index',        field2:'uv_index',        op:'gt',warn:T.uv_warn,   emerg:T.uv_emerg,  icon:'☀️'},
+    ];
+    checks.forEach(cfg=>{
+      const v=w[cfg.field]??w[cfg.field2];
+      if(v==null) return;
+      const gt=cfg.op==='gt';
+      const sev=gt?(v>=cfg.emerg?'emergency':v>=cfg.warn?'warning':null)
+                  :(v<=cfg.emerg?'emergency':v<=cfg.warn?'warning':null);
+      if(sev) newAlerts.push({
+        alert_id:`${city.station_id}-${cfg.type}`,
+        station_id:city.station_id,
+        station_name:city.city,
+        alert_type:cfg.type, severity:sev,
+        message:`${cfg.type} ${sev}: ${cfg.field}=${Number(v).toFixed(1)}`,
+        triggered_at:new Date().toISOString(),
+        icon:cfg.icon,
+      });
+    });
+  });
+  S.alerts=newAlerts;
+  renderSidebarAlerts();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OVERVIEW PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderOverviewHero(city){
+  const w=city.weather;
+  if(!w){document.getElementById('hero-city').textContent='No data';return;}
+  const t=w.temperature_c??w.temperature_2m;
+  const fl=w.feels_like_c??w.apparent_temperature;
+  const ww=wmo(w.weather_code);
+  document.getElementById('hero-location').textContent=`${city.city}, ${city.country} · ${city.latitude?.toFixed(2)}°, ${city.longitude?.toFixed(2)}°`;
+  document.getElementById('hero-city').textContent=city.city;
+  document.getElementById('hero-cond').textContent=`${ww.e} ${ww.l}`;
+  document.getElementById('hero-temp').innerHTML=`${t!=null?Number(t).toFixed(1):'—'}<sup>°C</sup>`;
+  document.getElementById('hero-feels').textContent=fl!=null?`Feels like ${Number(fl).toFixed(1)}°C`:'';
+  document.getElementById('hero-icon').textContent=ww.e;
+  document.getElementById('hero-time').textContent=`Updated ${new Date().toLocaleTimeString()}`;
+  document.getElementById('ov-updated').textContent=new Date().toLocaleString();
+
+  // KPI strip
+  const kpis=[
+    {label:'Humidity',   val:w.humidity_pct??w.relative_humidity_2m, unit:'%',   sub:'Relative', color:'#5ca8ff', pct:w.humidity_pct??w.relative_humidity_2m??0},
+    {label:'Wind',       val:w.wind_speed_ms??w.wind_speed_10m,       unit:'m/s', sub:`Gust ${Number(w.wind_gust_ms??w.wind_gusts_10m??0).toFixed(1)}m/s`, color:'#f5a623', pct:Math.min(100,((w.wind_speed_ms??w.wind_speed_10m??0)/30)*100)},
+    {label:'Pressure',   val:w.pressure_hpa??w.surface_pressure,      unit:'hPa', sub:'Sea level', color:'#00e5c3', pct:Math.min(100,(((w.pressure_hpa??w.surface_pressure??1013)-950)/100)*100)},
+    {label:'UV Index',   val:w.uv_index,                              unit:'',    sub:uvLabel(w.uv_index), color:uvColor(w.uv_index), pct:Math.min(100,((w.uv_index??0)/12)*100)},
+    {label:'Cloud',      val:w.cloud_cover_pct??w.cloud_cover,        unit:'%',   sub:'Coverage',  color:'#8c9085', pct:w.cloud_cover_pct??w.cloud_cover??0},
+    {label:'Visibility', val:w.visibility_km!=null?w.visibility_km:w.visibility!=null?(w.visibility/1000):null, unit:'km', sub:'Horizontal', color:'#6dd68c', pct:Math.min(100,((w.visibility_km??(w.visibility??0)/1000)/20)*100)},
+  ];
+  document.getElementById('kpi-strip').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-val">${k.val!=null?Number(k.val).toFixed(k.unit==='hPa'?0:1):'—'}<span class="kpi-unit">${k.unit}</span></div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-bar" style="width:${k.pct}%;background:${k.color};"></div>
+    </div>`).join('');
+}
+
+function uvLabel(v){if(!v)return'Low';if(v>=11)return'Extreme';if(v>=8)return'Very High';if(v>=6)return'High';if(v>=3)return'Moderate';return'Low';}
+function uvColor(v){if(!v)return'#6dd68c';if(v>=8)return'#ff5c5c';if(v>=6)return'#f5a623';if(v>=3)return'#00e5c3';return'#6dd68c';}
+
+// ── Overview range pills ────────────────────────────────────────
+function buildOvRange(){
+  const ranges=[{h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'}];
+  document.getElementById('ov-range').innerHTML=ranges.map(r=>`
+    <button class="rpill ${r.h===S.ovRange?'active':''}" onclick="setOvRange(${r.h},this)">${r.l}</button>`).join('');
+}
+async function setOvRange(h,btn){
+  S.ovRange=h;
+  document.querySelectorAll('#ov-range .rpill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const city=S.cities.find(c=>c.station_id===S.activeId);
+  if(city) loadAndRenderOverviewCharts(city,h);
+}
+
+async function loadAndRenderOverviewCharts(city,hours){
+  try{
+    await loadCityHistory(city,hours);
+    const h=city.history[`h${hours}`];
+    if(!h||!h.time||!h.time.length) return;
+    destroyChart('ov-temp');
+    destroyChart('ov-prec');
+    destroyChart('ov-wind');
+    S.charts['ov-temp']=makeLineChart('ov-temp-chart',h.time,
+      [{data:h.temp,color:'#00e5c3',fill:true,label:'Temp °C'}],
+      {y:{title:{display:true,text:'°C',color:'#6b6e66',font:{size:9}}}},'time');
+    S.charts['ov-prec']=new Chart(document.getElementById('ov-prec-chart'),{
+      type:'bar',
+      data:{labels:h.time,datasets:[
+        {label:'Precip mm',data:h.prec,backgroundColor:'rgba(92,168,255,0.4)',borderColor:'#5ca8ff',borderWidth:0.5,yAxisID:'y'},
+        {label:'Humidity %',data:h.hum,type:'line',borderColor:'#00e5c3',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.4,yAxisID:'y1'},
+      ]},
+      options:{...CD,scales:{
+        x:{...CD.scales.x,type:'time',time:{displayFormats:{hour:'HH:mm',day:'MMM d'}}},
+        y:{...CD.scales.y,position:'left',title:{display:true,text:'mm',color:'#6b6e66',font:{size:9}}},
+        y1:{...CD.scales.y,position:'right',title:{display:true,text:'%',color:'#6b6e66',font:{size:9}},grid:{drawOnChartArea:false}},
+      }}
+    });
+    S.charts['ov-wind']=makeLineChart('ov-wind-chart',h.time,
+      [{data:h.wind,color:'#f5a623',fill:true,label:'Wind m/s'}],
+      {y:{title:{display:true,text:'m/s',color:'#6b6e66',font:{size:9}}}},'time');
+  }catch(e){
+    console.warn('Overview charts failed:',e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARE PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderComparePage(){
+  const ids=S.compareIds.size ? [...S.compareIds] : S.cities.map(c=>c.station_id);
+  const cities=ids.map(id=>S.cities.find(c=>c.station_id===id)).filter(Boolean);
+
+  // City cards
+  document.getElementById('compare-cards').innerHTML=cities.map((c,ci)=>{
+    const w=c.weather;
+    const t=w?.temperature_c??w?.temperature_2m;
+    const ww=wmo(w?.weather_code);
+    const color=CITY_COLORS[ci%CITY_COLORS.length];
+    return `<div class="city-compare-card">
+      <div class="ccc-head">
+        <div class="ccc-badge" style="background:${color};"></div>
+        <div>
+          <div class="ccc-name">${c.city}</div>
+          <div class="ccc-country">${c.country}</div>
+        </div>
+        <div style="margin-left:auto;font-size:1.5rem;">${ww.e}</div>
+      </div>
+      <div class="ccc-temp">${t!=null?Number(t).toFixed(1)+'°C':'—'}</div>
+      <div class="ccc-metrics">
+        <div class="ccc-m"><div class="ccc-ml">Humidity</div><div class="ccc-mv">${w?.humidity_pct??w?.relative_humidity_2m??'—'}%</div></div>
+        <div class="ccc-m"><div class="ccc-ml">Wind</div><div class="ccc-mv">${(w?.wind_speed_ms??w?.wind_speed_10m??'—')} m/s</div></div>
+        <div class="ccc-m"><div class="ccc-ml">Pressure</div><div class="ccc-mv">${w?.pressure_hpa??w?.surface_pressure??'—'} hPa</div></div>
+        <div class="ccc-m"><div class="ccc-ml">UV</div><div class="ccc-mv">${w?.uv_index??'—'}</div></div>
+        <div class="ccc-m" style="grid-column:1/-1;"><div class="ccc-ml">Condition</div><div class="ccc-mv">${ww.l}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Sort & render table
+  const rows=cities.map(c=>{
+    const w=c.weather||{};
+    return{
+      name:c.city,country:c.country,
+      temp:+(w.temperature_c??w.temperature_2m??0),
+      feels:+(w.feels_like_c??w.apparent_temperature??0),
+      hum:+(w.humidity_pct??w.relative_humidity_2m??0),
+      wind:+(w.wind_speed_ms??w.wind_speed_10m??0),
+      pres:+(w.pressure_hpa??w.surface_pressure??0),
+      wcode:w.weather_code,
+    };
+  });
+  rows.sort((a,b)=>S.sortDir*(a[S.sortKey]>b[S.sortKey]?1:a[S.sortKey]<b[S.sortKey]?-1:0));
+  const maxT=Math.max(...rows.map(r=>r.temp));
+  const minT=Math.min(...rows.map(r=>r.temp));
+  document.getElementById('compare-tbody').innerHTML=rows.map(r=>{
+    const hot=r.temp===maxT,cold=r.temp===minT;
+    const tc=r.temp>=35?'tt-hot':r.temp>=25?'tt-warm':r.temp>=10?'tt-mild':'tt-cool';
+    const ww=wmo(r.wcode);
+    return`<tr class="${hot?'row-hot':cold?'row-cold':''}">
+      <td>${r.name}, ${r.country}</td>
+      <td><span class="temp-tag ${tc}">${r.temp.toFixed(1)}°C</span></td>
+      <td>${r.feels.toFixed(1)}°C</td>
+      <td>${r.hum}%</td>
+      <td>${r.wind.toFixed(1)} m/s</td>
+      <td>${r.pres.toFixed(0)} hPa</td>
+      <td>${ww.e} ${ww.l}</td>
+    </tr>`;
+  }).join('');
+
+  // Bar charts
+  const labels=cities.map(c=>c.city);
+  const colors=cities.map((_,i)=>CITY_COLORS[i%CITY_COLORS.length]);
+  destroyChart('cmp-temp');
+  destroyChart('cmp-hum');
+  S.charts['cmp-temp']=new Chart(document.getElementById('cmp-temp-chart'),{
+    type:'bar',
+    data:{labels,datasets:[{
+      label:'Temperature °C',
+      data:cities.map(c=>+(c.weather?.temperature_c??c.weather?.temperature_2m??0)),
+      backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:1.5,borderRadius:4,
+    }]},
+    options:{...CD,plugins:{...CD.plugins,legend:{display:false}},
+      scales:{x:CD.scales.x,y:{...CD.scales.y,title:{display:true,text:'°C'}}}}
+  });
+  S.charts['cmp-hum']=new Chart(document.getElementById('cmp-hum-chart'),{
+    type:'bar',
+    data:{labels,datasets:[{
+      label:'Humidity %',
+      data:cities.map(c=>+(c.weather?.humidity_pct??c.weather?.relative_humidity_2m??0)),
+      backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:1.5,borderRadius:4,
+    }]},
+    options:{...CD,plugins:{...CD.plugins,legend:{display:false}},
+      scales:{x:CD.scales.x,y:{...CD.scales.y,max:100,title:{display:true,text:'%'}}}}
+  });
+}
+
+function sortTable(key){
+  if(S.sortKey===key) S.sortDir*=-1;
+  else{S.sortKey=key;S.sortDir=-1;}
+  document.querySelectorAll('table.ct th').forEach(th=>th.classList.remove('sorted'));
+  renderComparePage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORICAL PAGE
+// ═══════════════════════════════════════════════════════════════
+function buildHistRange(){
+  const ranges=[
+    {h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'},{h:720,l:'30d'},
+  ];
+  document.getElementById('hist-range').innerHTML=ranges.map(r=>`
+    <button class="rpill ${r.h===S.histRange?'active':''}" onclick="setHistRange(${r.h},this,'${r.l}')">${r.l}</button>`).join('');
+}
+async function setHistRange(h,btn,label){
+  S.histRange=h;
+  document.querySelectorAll('#hist-range .rpill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('hist-range-label').textContent=
+    {6:'Last 6 hours',24:'Last 24 hours',72:'Last 3 days',168:'Last 7 days',720:'Last 30 days'}[h]||label;
+  renderHistoricalPage();
+}
+
+async function renderHistoricalPage(){
+  const city=S.cities.find(c=>c.station_id===S.activeId);
+  if(!city){document.getElementById('hist-city-label').textContent='Select a city from the sidebar';return;}
+  document.getElementById('hist-city-label').textContent=`${city.city}, ${city.country}`;
+  await loadCityHistory(city,S.histRange);
+  const h=city.history[`h${S.histRange}`];
+  if(!h||!h.time.length) return;
+
+  // Stats
+  const temps=h.temp.filter(v=>v!=null);
+  const min=Math.min(...temps),max=Math.max(...temps),avg=temps.reduce((a,b)=>a+b,0)/temps.length;
+  const precTotal=h.prec.reduce((a,b)=>a+(b||0),0);
+  document.getElementById('hist-stats').innerHTML=`
+    <div class="hist-stat"><div class="hs-label">Min Temp</div><div class="hs-value" style="color:var(--blue)">${min.toFixed(1)}°</div><div class="hs-note">Lowest reading</div></div>
+    <div class="hist-stat"><div class="hs-label">Max Temp</div><div class="hs-value" style="color:var(--red)">${max.toFixed(1)}°</div><div class="hs-note">Highest reading</div></div>
+    <div class="hist-stat"><div class="hs-label">Avg Temp</div><div class="hs-value" style="color:var(--teal)">${avg.toFixed(1)}°</div><div class="hs-note">Mean</div></div>
+    <div class="hist-stat"><div class="hs-label">Total Precip</div><div class="hs-value" style="color:var(--blue)">${precTotal.toFixed(1)}mm</div><div class="hs-note">Accumulated</div></div>`;
+
+  // Charts
+  const xCfg={type:'time',time:{displayFormats:{hour:'HH:mm',day:'MMM d'}},...CD.scales.x};
+  ['hist-temp','hist-prec','hist-wind','hist-hum'].forEach(k=>destroyChart(k));
+  S.charts['hist-temp']=makeLineChart('hist-temp-chart',h.time,[{data:h.temp,color:'#00e5c3',fill:true,label:'Temp °C'}],{y:{title:{display:true,text:'°C'}}},'time');
+  S.charts['hist-prec']=new Chart(document.getElementById('hist-prec-chart'),{
+    type:'bar',
+    data:{labels:h.time,datasets:[{label:'Precip mm',data:h.prec,backgroundColor:'rgba(92,168,255,0.45)',borderColor:'#5ca8ff',borderWidth:0.5}]},
+    options:{...CD,scales:{x:xCfg,y:{...CD.scales.y,title:{display:true,text:'mm'}}}}
+  });
+  S.charts['hist-wind']=makeLineChart('hist-wind-chart',h.time,[{data:h.wind,color:'#f5a623',fill:true,label:'Wind m/s'}],{y:{title:{display:true,text:'m/s'}}},'time');
+  S.charts['hist-hum']=makeLineChart('hist-hum-chart',h.time,[{data:h.hum,color:'#5ca8ff',fill:true,label:'Humidity %'}],{y:{title:{display:true,text:'%'},max:100}},'time');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERTS PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderAlertsPage(){
+  const el=document.getElementById('alerts-full');
+  const icons={heat:'🔥',cold:'❄️',wind:'💨',rain:'🌧️',uv:'☀️',flood:'🌊',storm:'⛈️'};
+  el.innerHTML=S.alerts.length ? S.alerts.map(a=>`
+    <div class="alert-card ${a.severity}">
+      <div class="alert-icon-big">${icons[a.alert_type||a.type]||'⚠️'}</div>
+      <div class="alert-content">
+        <div class="alert-row1">
+          <span class="alert-sev ${a.severity}">${a.severity.toUpperCase()}</span>
+          <span class="alert-station">${a.station_name||a.station||''}</span>
+        </div>
+        <div class="alert-msg-full">${a.message}</div>
+        <div class="alert-meta">${a.triggered_at?timeAgo(a.triggered_at):''}</div>
+      </div>
+    </div>`).join('')
+    : '<div class="card" style="padding:2rem;text-align:center;font-family:var(--mono);font-size:0.72rem;color:var(--muted);">✓ No active alerts across all tracked cities</div>';
+
+  // Threshold config
+  const cfgs=[
+    {key:'heat_warn',  label:'Heat Warning',    unit:'°C'},
+    {key:'heat_emerg', label:'Heat Emergency',   unit:'°C'},
+    {key:'cold_warn',  label:'Cold Warning',     unit:'°C'},
+    {key:'cold_emerg', label:'Cold Emergency',   unit:'°C'},
+    {key:'wind_warn',  label:'Wind Warning',     unit:'m/s'},
+    {key:'wind_emerg', label:'Wind Emergency',   unit:'m/s'},
+    {key:'rain_warn',  label:'Rain Warning',     unit:'mm/h'},
+    {key:'rain_emerg', label:'Rain Emergency',   unit:'mm/h'},
+    {key:'uv_warn',    label:'UV Warning',       unit:'idx'},
+    {key:'uv_emerg',   label:'UV Emergency',     unit:'idx'},
+  ];
+  document.getElementById('threshold-grid').innerHTML=cfgs.map(c=>`
+    <div class="threshold-card">
+      <div class="tc-name">${c.label}</div>
+      <div class="tc-row">
+        <span class="tc-label">Threshold</span>
+        <input class="tc-input" id="tc-${c.key}" type="number" value="${S.thresholds[c.key]}">
+        <span class="tc-unit">${c.unit}</span>
+      </div>
+    </div>`).join('');
+}
+
+function saveThresholds(){
+  Object.keys(S.thresholds).forEach(k=>{
+    const el=document.getElementById(`tc-${k}`);
+    if(el) S.thresholds[k]=parseFloat(el.value)||S.thresholds[k];
+  });
+  runAlertEngine();
+  renderAlertsPage();
+  const saved=document.getElementById('thresh-saved');
+  saved.style.display='';
+  setTimeout(()=>saved.style.display='none',2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHART EXPAND MODAL
+// ═══════════════════════════════════════════════════════════════
+function expandChart(chartId, title){
+  S.modalChartId=chartId;
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal').classList.add('open');
+  // Clone the source chart's data into the modal chart
+  const src=S.charts[chartId];
+  if(!src) return;
+  // Build range pills for modal
+  const isHist=chartId.startsWith('hist')||chartId.startsWith('ov');
+  if(isHist){
+    const ranges=chartId.startsWith('hist')
+      ? [{h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'},{h:720,l:'30d'}]
+      : [{h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'}];
+    const cur=chartId.startsWith('hist')?S.histRange:S.ovRange;
+    document.getElementById('modal-range').innerHTML=ranges.map(r=>`
+      <button class="rpill ${r.h===cur?'active':''}"
+        onclick="setModalRange(${r.h},'${chartId}',this)">${r.l}</button>`).join('');
+  } else {
+    document.getElementById('modal-range').innerHTML='';
+  }
+  destroyChart('modal');
+  const cfg=JSON.parse(JSON.stringify(src.config));
+  if(cfg.options?.scales?.x) delete cfg.options.scales.x.type; // re-evaluated from data
+  // Reattach time scale if needed
+  if(src.config.options?.scales?.x?.type==='time'){
+    cfg.options.scales.x.type='time';
+  }
+  S.charts['modal']=new Chart(document.getElementById('modal-chart'),{
+    type:cfg.type,
+    data:JSON.parse(JSON.stringify(src.data)),
+    options:{...cfg.options,animation:{duration:300},
+      maintainAspectRatio:false,responsive:true},
+  });
+}
+
+async function setModalRange(h,chartId,btn){
+  document.querySelectorAll('#modal-range .rpill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const city=S.cities.find(c=>c.station_id===S.activeId);
+  if(!city) return;
+  if(chartId.startsWith('hist')) S.histRange=h;
+  else S.ovRange=h;
+  await loadCityHistory(city,h);
+  const hist=city.history[`h${h}`];
+  if(!hist) return;
+  const mc=S.charts['modal'];
+  if(!mc) return;
+  const field=chartId.includes('temp')?'temp':chartId.includes('prec')?'prec':chartId.includes('wind')?'wind':'hum';
+  mc.data.labels=hist.time;
+  mc.data.datasets[0].data=hist[field];
+  mc.update();
+}
+
+function closeModal(e){
+  if(e && e.target!==document.getElementById('modal') && e.type==='click') return;
+  document.getElementById('modal').classList.remove('open');
+  destroyChart('modal');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════════════════════════════
+function destroyChart(k){
+  if(S.charts[k]){S.charts[k].destroy();delete S.charts[k];}
+}
+
+function makeLineChart(canvasId,labels,datasets,scaleOverrides,xType){
+  const ds=datasets.map(d=>({
+    label:d.label,data:d.data,
+    borderColor:d.color,backgroundColor:d.fill?d.color.replace('#','').length===6?hexToRgba(d.color,0.07):'transparent':'transparent',
+    fill:!!d.fill,tension:0.4,borderWidth:1.5,pointRadius:0,pointHoverRadius:4,
+  }));
+  const xScale=xType==='time'
+    ? {...CD.scales.x,type:'time',time:{displayFormats:{hour:'HH:mm',day:'MMM d',week:'MMM d'}}}
+    : CD.scales.x;
+  return new Chart(document.getElementById(canvasId),{
+    type:'line',
+    data:{labels,datasets:ds},
+    options:{...CD,
+      plugins:{...CD.plugins,legend:{display:datasets.length>1,position:'top',align:'end',
+        labels:{boxWidth:8,padding:12,color:'#6b6e66',font:{family:"'Geist Mono',monospace",size:10}}}},
+      scales:{x:xScale,y:{...CD.scales.y,...(scaleOverrides?.y||{})}},
+    }
+  });
+}
+
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`rgba(${r},${g},${b},${a})`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+function generateDemoHistory(city, hours){
+  const baseTemp = {
+    'Nairobi':21.4,'Mombasa':30.2,'Kisumu':26.8,
+    'Nakuru':18.9,'Kampala':24.5,'Dar es Salaam':28.6
+  }[city.city] || 22;
+  const time=[],temp=[],prec=[],wind=[],hum=[];
+  const now=new Date();
+  const step=hours<=24?1:(hours<=168?2:6); // hour step
+  for(let i=hours;i>=0;i-=step){
+    const d=new Date(now-i*3600000);
+    const h=d.getHours();
+    const diurnal=Math.sin((h-6)*Math.PI/12)*4;
+    const n=()=>(Math.random()-0.5)*2;
+    time.push(d);
+    temp.push(+(baseTemp+diurnal+n()).toFixed(1));
+    prec.push(+(Math.random()<0.12?Math.random()*4:0).toFixed(1));
+    wind.push(+(3+Math.random()*5+n()).toFixed(1));
+    hum.push(+(65+n()*12).toFixed(0));
+  }
+  return{time,temp,prec,wind,hum};
+}
+
+function getDemoWeather(city){
+  const bases={
+    'Nairobi':{t:21.4,h:67,w:3.2,p:1013,uv:5.2,wc:2},
+    'Mombasa':{t:30.2,h:82,w:5.8,p:1010,uv:7.8,wc:61},
+    'Kisumu': {t:26.8,h:74,w:2.1,p:1011,uv:4.1,wc:63},
+    'Nakuru': {t:18.9,h:55,w:4.5,p:1015,uv:6.3,wc:1},
+    'Kampala':{t:24.5,h:78,w:1.8,p:1012,uv:3.8,wc:3},
+    'Dar es Salaam':{t:28.6,h:85,w:6.2,p:1009,uv:2.1,wc:80},
+  };
+  const b=bases[city.city]||{t:22,h:65,w:3,p:1013,uv:4,wc:2};
+  return{
+    temperature_c:b.t,feels_like_c:b.t-0.8,
+    humidity_pct:b.h,pressure_hpa:b.p,
+    wind_speed_ms:b.w,wind_gust_ms:b.w*1.6,
+    uv_index:b.uv,weather_code:b.wc,
+    cloud_cover_pct:40,visibility_km:12,
+    precipitation_mm:0,wind_dir_deg:180,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL REFRESH
+// ═══════════════════════════════════════════════════════════════
+async function refreshAll(){
+  let flaskData=[];
+  try{
+    flaskData=await fetchWithTimeout(`${API}/current`,4000);
+  }catch(e){}
+  try{
+    const a=await fetchWithTimeout(`${API}/alerts/active`,4000);
+    if(Array.isArray(a)) S.alerts=a;
+  }catch(e){}
+
+  // Update weather for each city
+  await Promise.allSettled(S.cities.map(async city=>{
+    const match=flaskData.find&&flaskData.find(s=>
+      s.station_id===city.station_id||
+      s.station_name===city.city||
+      s.city===city.city
+    );
+    if(match) city.weather=match;
+    else await loadCityWeather(city);
+  }));
+
+  runAlertEngine();
+  renderTrackedList();
+  updateMapMarkers();
+  if(S.activeId){
+    const city=S.cities.find(c=>c.station_id===S.activeId);
+    if(city) renderOverviewHero(city);
+  }
+  setStatus(true);
+}
+
+async function fetchNow(){
+  const btn=document.getElementById('btn-fetch');
+  btn.disabled=true; btn.textContent='↻ Fetching…';
+  try{
+    await apiPost('/system/fetch-now');
+  }catch(e){}
+  await refreshAll();
+  const city=S.cities.find(c=>c.station_id===S.activeId);
+  if(city) loadAndRenderOverviewCharts(city,S.ovRange);
+  btn.disabled=false; btn.textContent='↻ Refresh';
+}
+
+function setStatus(ok){
+  document.getElementById('status-dot').className='status-dot'+(ok?'':' error');
+  document.getElementById('status-text').textContent=ok?'Live':'Offline';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+const DEFAULT_CITIES=[
+  {station_id:1,station_code:'KE-NBO-001',station_name:'Nairobi JKIA',city:'Nairobi',country:'KE',latitude:-1.319,longitude:36.927,elevation_m:1624,source_api:'demo'},
+  {station_id:2,station_code:'KE-MBA-001',station_name:'Mombasa Airport',city:'Mombasa',country:'KE',latitude:-4.034,longitude:39.594,elevation_m:55,source_api:'demo'},
+  {station_id:3,station_code:'KE-KIS-001',station_name:'Kisumu Met',city:'Kisumu',country:'KE',latitude:-0.091,longitude:34.767,elevation_m:1131,source_api:'demo'},
+  {station_id:4,station_code:'KE-NKR-001',station_name:'Nakuru Met',city:'Nakuru',country:'KE',latitude:-0.303,longitude:36.080,elevation_m:1850,source_api:'demo'},
+  {station_id:5,station_code:'UG-KLA-001',station_name:'Kampala Entebbe',city:'Kampala',country:'UG',latitude:0.042,longitude:32.443,elevation_m:1155,source_api:'demo'},
+  {station_id:6,station_code:'TZ-DAR-001',station_name:'Dar es Salaam JN',city:'Dar es Salaam',country:'TZ',latitude:-6.878,longitude:39.202,elevation_m:53,source_api:'demo'},
+];
+
+async function boot(){
+  const loadingEl=document.getElementById('loading');
+  const msgEl=document.getElementById('loading-msg');
+
+  // ── PHASE 1: Always show the UI — dismiss loading after max 1.5s no matter what ──
+  const BOOT_TIMEOUT = setTimeout(()=>{
+    loadingEl.style.transition='opacity 0.4s';
+    loadingEl.style.opacity='0';
+    setTimeout(()=>{loadingEl.style.display='none';},400);
+  }, 1500);
+
+  try{
+    msgEl.textContent='Connecting to Flask API…';
+
+    // ── PHASE 2: Try Flask stations (2s timeout) ──
+    let usedFlask=false;
+    try{
+      const stns=await fetchWithTimeout(`${API}/stations`,2000);
+      if(stns&&stns.length){
+        stns.forEach(s=>{
+          S.cities.push({...s,city:s.city||s.name||s.station_name,weather:null,history:{},inCompare:false});
+        });
+        usedFlask=true;
+      }
+    }catch(e){ /* Flask offline — proceed to demo */ }
+
+    // ── PHASE 3: Load default cities if Flask not available ──
+    if(!usedFlask){
+      DEFAULT_CITIES.forEach(dc=>{
+        S.cities.push({...dc,weather:getDemoWeather(dc),history:{},inCompare:false});
+      });
+    }
+
+    // Guard: always have at least the defaults
+    if(!S.cities.length){
+      DEFAULT_CITIES.forEach(dc=>{
+        S.cities.push({...dc,weather:getDemoWeather(dc),history:{},inCompare:false});
+      });
+    }
+
+    // ── PHASE 4: Set up state before any async fetching ──
+    S.cities.slice(0,3).forEach(c=>S.compareIds.add(c.station_id));
+    S.activeId=S.cities[0].station_id;
+    buildOvRange();
+    buildHistRange();
+    initMap();
+    renderTrackedList();   // show sidebar immediately with demo data
+
+    // Render hero immediately with whatever weather data is available
+    const firstCity=S.cities[0];
+    renderOverviewHero(firstCity);
+
+    // ── PHASE 5: Dismiss loading NOW — don't wait for network ──
+    clearTimeout(BOOT_TIMEOUT);
+    loadingEl.style.transition='opacity 0.4s';
+    loadingEl.style.opacity='0';
+    setTimeout(()=>{loadingEl.style.display='none';},400);
+
+    // ── PHASE 6: Fetch live weather in background (doesn't block UI) ──
+    msgEl.textContent='Fetching live weather…';
+
+    if(usedFlask){
+      // Fetch all at once from Flask
+      refreshAll().catch(()=>{});
+    } else {
+      // Fetch Open-Meteo for all cities in parallel, each with individual timeout
+      Promise.allSettled(S.cities.map(city=>
+        loadCityWeather(city).then(()=>{
+          // Re-render hero if this is the active city
+          if(city.station_id===S.activeId) renderOverviewHero(city);
+          renderTrackedList();
+        })
+      )).then(()=>{
+        runAlertEngine();
+        renderTrackedList();
+        updateMapMarkers();
+        setStatus(true);
+        // Load overview charts for active city
+        const active=S.cities.find(c=>c.station_id===S.activeId);
+        if(active) loadAndRenderOverviewCharts(active,S.ovRange).catch(()=>{});
+      });
+    }
+
+    setStatus(true);
+
+    // Auto-refresh
+    setInterval(async()=>{
+      try{
+        await refreshAll();
+        const city=S.cities.find(c=>c.station_id===S.activeId);
+        if(city) renderOverviewHero(city);
+      }catch(e){}
+    },REFRESH);
+
+  }catch(err){
+    // Absolute last resort — make sure loading screen is gone
+    console.error('Boot error:',err);
+    clearTimeout(BOOT_TIMEOUT);
+    loadingEl.style.display='none';
+    setStatus(false);
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

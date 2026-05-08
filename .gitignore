@@ -24,4 +24,9 @@ Thumbs.db
 *.log
 
 # MySQL dumps (optional)
-*.sql
+# *.sql
+
+
+run_schema.py
+GWDC_dashboard.html
+index2.html

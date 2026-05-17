@@ -9,6 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <style>
 :root {
   --bg:        #111210;
@@ -555,6 +557,45 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
 .coming-feat{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:0.6rem 0.85rem;font-family:var(--mono);font-size:0.68rem;color:var(--muted2);text-align:left;display:flex;align-items:center;gap:0.6rem;}
 .coming-feat::before{content:'○';color:var(--violet);flex-shrink:0;}
 
+
+
+/* ════════════════════════════════
+   PAGE 7 — DOCS IFRAME
+   ════════════════════════════════ */
+.docs-page{
+    display:none;
+    height:calc(100vh - var(--topbar-h) - var(--navbar-h));
+    padding:0;
+}
+.docs-page.active{ display:flex; flex-direction:column; }
+.docs-toolbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.5rem 1.25rem;
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+    flex-shrink:0;
+}
+.docs-toolbar-left{
+    font-family:var(--mono);font-size:0.62rem;color:var(--muted);
+    display:flex;align-items:center;gap:0.75rem;
+}
+.docs-label{color:var(--teal);font-weight:500;}
+.docs-frame{
+    flex:1;width:100%;border:none;
+    background:var(--bg);
+    display:block;
+}
+.docs-open-btn{
+    font-family:var(--mono);font-size:0.6rem;font-weight:500;
+    letter-spacing:0.06em;text-transform:uppercase;
+    background:none;color:var(--muted2);
+    border:1px solid var(--border2);border-radius:5px;
+    padding:0.25rem 0.7rem;cursor:pointer;
+    transition:all 0.15s;text-decoration:none;
+    display:inline-flex;align-items:center;gap:0.35rem;
+}
+.docs-open-btn:hover{color:var(--teal);border-color:rgba(0,229,195,0.3);}
+
 /* ════════════════════════════════
    LOADING SCREEN
    ════════════════════════════════ */
@@ -626,6 +667,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
   <div class="nav-tab"         data-page="alerts"    onclick="switchPage('alerts',this)">Alerts <span id="alert-badge" style="display:none;margin-left:3px;background:rgba(255,92,92,0.2);color:var(--red);font-size:0.5rem;padding:0.1rem 0.3rem;border-radius:3px;"></span></div>
   <div class="nav-tab soon"    data-page="analytics">Analytics <span class="soon-badge">Soon</span></div>
   <div class="nav-tab soon"    data-page="ml">ML Predictions <span class="soon-badge">Phase 5</span></div>
+  <div class="nav-tab"         data-page="docs"       onclick="switchPage('docs',this)">Documentation</div>
 </nav>
 
 <!-- APP BODY -->
@@ -707,7 +749,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
             <span class="card-title">Temperature trend</span>
             <div style="display:flex;gap:0.5rem;align-items:center;">
               <div class="range-row" id="ov-range"></div>
-              <button class="expand-btn" onclick="expandChart('ov-temp','Temperature Trend')">⤢</button>
+              <!-- <button class="expand-btn" onclick="expandChart('ov-temp','Temperature Trend')">⤢</button> -->
             </div>
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
@@ -717,7 +759,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Precipitation & Humidity</span>
-            <button class="expand-btn" onclick="expandChart('ov-prec','Precipitation & Humidity')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('ov-prec','Precipitation & Humidity')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:150px;"><canvas id="ov-prec-chart"></canvas></div>
@@ -726,7 +768,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Wind Speed</span>
-            <button class="expand-btn" onclick="expandChart('ov-wind','Wind Speed')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('ov-wind','Wind Speed')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:140px;"><canvas id="ov-wind-chart"></canvas></div>
@@ -752,7 +794,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Temperature comparison</span>
-            <button class="expand-btn" onclick="expandChart('cmp-temp','Temperature Comparison')">⤢</button>
+            <!--<button class="expand-btn" onclick="expandChart('cmp-temp','Temperature Comparison')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:180px;"><canvas id="cmp-temp-chart"></canvas></div>
@@ -761,7 +803,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Humidity comparison</span>
-            <button class="expand-btn" onclick="expandChart('cmp-hum','Humidity Comparison')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('cmp-hum','Humidity Comparison')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:180px;"><canvas id="cmp-hum-chart"></canvas></div>
@@ -810,7 +852,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Temperature (°C)</span>
-            <button class="expand-btn" onclick="expandChart('hist-temp','Temperature History')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('hist-temp','Temperature History')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:180px;"><canvas id="hist-temp-chart"></canvas></div>
@@ -823,7 +865,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Precipitation (mm)</span>
-            <button class="expand-btn" onclick="expandChart('hist-prec','Precipitation History')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('hist-prec','Precipitation History')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:160px;"><canvas id="hist-prec-chart"></canvas></div>
@@ -836,7 +878,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Wind Speed (m/s)</span>
-            <button class="expand-btn" onclick="expandChart('hist-wind','Wind Speed History')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('hist-wind','Wind Speed History')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:160px;"><canvas id="hist-wind-chart"></canvas></div>
@@ -849,7 +891,7 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="card">
           <div class="card-head">
             <span class="card-title">Humidity (%)</span>
-            <button class="expand-btn" onclick="expandChart('hist-hum','Humidity History')">⤢</button>
+            <!-- <button class="expand-btn" onclick="expandChart('hist-hum','Humidity History')">⤢</button> -->
           </div>
           <div class="card-body" style="padding-top:0.5rem;">
             <div class="chart-wrap" style="height:160px;"><canvas id="hist-hum-chart"></canvas></div>
@@ -906,6 +948,21 @@ table.ct tr:hover td{background:rgba(255,255,255,0.02);}
           <div class="coming-feat">Weekly automatic model retraining via cron</div>
         </div>
       </div>
+    </div>
+
+    <! -- PAGE: DOCUMENTATION -->
+    <div class = 'page docs-page' id = "page-docs">
+      <div class = 'docs-toolbar'>
+        <div class = 'docs-toolbar-left'>
+          <span class = 'docs-label'>WeatherCore Docs</span>
+          <span>v1.0 Technical Reference</span>
+        </div>
+        <a class = 'docs-open-btn' href = "weathercore_docs.html" target="_blank">
+          ↗ Open in new tab
+        </a>
+      </div>
+      <iframe class = 'docs-frame' id="docs-frame" src="", data-src="weathercore_docs.html"
+              title="WeatherCore Documentation"></iframe>
     </div>
 
   </div><!-- end main-content -->
@@ -1686,39 +1743,56 @@ function saveThresholds(){
 // ═══════════════════════════════════════════════════════════════
 // CHART EXPAND MODAL
 // ═══════════════════════════════════════════════════════════════
-function expandChart(chartId, title){
-  S.modalChartId=chartId;
-  document.getElementById('modal-title').textContent=title;
+function expandChart(chartId, title) {
+  S.modalChartId = chartId;
+  document.getElementById('modal-title').textContent = title;
   document.getElementById('modal').classList.add('open');
   // Clone the source chart's data into the modal chart
-  const src=S.charts[chartId];
-  if(!src) return;
+  const src = S.charts[chartId];
+  if (!src) return;
   // Build range pills for modal
-  const isHist=chartId.startsWith('hist')||chartId.startsWith('ov');
-  if(isHist){
-    const ranges=chartId.startsWith('hist')
-      ? [{h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'},{h:720,l:'30d'}]
-      : [{h:6,l:'6h'},{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'}];
-    const cur=chartId.startsWith('hist')?S.histRange:S.ovRange;
-    document.getElementById('modal-range').innerHTML=ranges.map(r=>`
-      <button class="rpill ${r.h===cur?'active':''}"
+  const isHist = chartId.startsWith('hist') || chartId.startsWith('ov');
+  if (isHist) {
+    const ranges = chartId.startsWith('hist')
+            ? [{h: 6, l: '6h'}, {h: 24, l: '24h'}, {h: 72, l: '3d'}, {h: 168, l: '7d'}, {h: 720, l: '30d'}]
+            : [{h: 6, l: '6h'}, {h: 24, l: '24h'}, {h: 72, l: '3d'}, {h: 168, l: '7d'}];
+    const cur = chartId.startsWith('hist') ? S.histRange : S.ovRange;
+    document.getElementById('modal-range').innerHTML = ranges.map(r => `
+      <button class="rpill ${r.h === cur ? 'active' : ''}"
         onclick="setModalRange(${r.h},'${chartId}',this)">${r.l}</button>`).join('');
   } else {
-    document.getElementById('modal-range').innerHTML='';
+    document.getElementById('modal-range').innerHTML = '';
   }
   destroyChart('modal');
-  const cfg=JSON.parse(JSON.stringify(src.config));
-  if(cfg.options?.scales?.x) delete cfg.options.scales.x.type; // re-evaluated from data
+
+// Completely recreate canvas
+  const oldCanvas = document.getElementById('modal-chart');
+
+  const newCanvas = document.createElement('canvas');
+  newCanvas.id = 'modal-chart';
+
+  oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+  const cfg = JSON.parse(JSON.stringify(src.config));
+  if (cfg.options?.scales?.x) delete cfg.options.scales.x.type; // re-evaluated from data
   // Reattach time scale if needed
-  if(src.config.options?.scales?.x?.type==='time'){
-    cfg.options.scales.x.type='time';
+  if (src.config.options?.scales?.x?.type === 'time') {
+    cfg.options.scales.x.type = 'time';
   }
-  S.charts['modal']=new Chart(document.getElementById('modal-chart'),{
-    type:cfg.type,
-    data:JSON.parse(JSON.stringify(src.data)),
-    options:{...cfg.options,animation:{duration:300},
-      maintainAspectRatio:false,responsive:true},
-  });
+
+  // Wait unti modal is visible
+  setTimeout(() => {
+    S.charts['modal'] = new Chart(document.getElementById('modal-chart'), {
+      type: cfg.type,
+      data: JSON.parse(JSON.stringify(src.data)),
+      options: {
+        ...cfg.options, animation: {duration: 300},
+        maintainAspectRatio: false, responsive: true
+      },
+    });
+
+    S.charts['modal'].resize();
+    S.charts['modal'].update();
+  }, 100);
 }
 
 async function setModalRange(h,chartId,btn){

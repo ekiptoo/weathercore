@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WeatherCore — Technical Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,600&family=Geist+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+    /*--ink:    #f3f4f6;*/
+    /*--paper:  #0b1220;*/
+    /*--paper2: #111827;*/
+    /*--paper3: #182235;*/
+    --ink:    #1a1a18;
+    --paper:  #f5f2eb;
+    --paper2: #edeae0;
+    --paper3: #e5e1d6;
+    --rule:   rgba(26,26,24,0.12);
+    --rule2:  rgba(26,26,24,0.22);
+    --teal:   #007a68;
+    --teal-l: rgba(0,122,104,0.1);
+    --amber:  #8a5a00;
+    --red:    #8a1a00;
+    --blue:   #003d8a;
+    --muted:  #6b6860;
+    --mono:   'Geist Mono', monospace;
+    --serif:  'Fraunces', serif;
+    --sans:   'Instrument Sans', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:15px;scroll-behavior:smooth;}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.7;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--paper);}
+::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:3px;}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* ── SIDEBAR NAV ── */
+.sidenav{
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+    border-right:1px solid var(--rule);
+    padding:2rem 1.5rem;
+    background:var(--paper);
+}
+.sidenav-logo{
+    font-family:var(--serif);font-size:1.05rem;font-weight:600;
+    color:var(--ink);margin-bottom:0.25rem;
+    display:flex;align-items:center;gap:0.4rem;
+}
+.sidenav-logo::before{content:'◉';color:var(--teal);font-size:0.7rem;}
+.sidenav-version{font-family:var(--mono);font-size:0.6rem;color:var(--muted);margin-bottom:2rem;padding-left:1.2rem;}
+.nav-group{margin-bottom:1.5rem;}
+.nav-group-label{
+    font-family:var(--mono);font-size:0.55rem;font-weight:500;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:0.5rem;
+}
+.nav-link{
+    display:block;text-decoration:none;
+    font-family:var(--mono);font-size:0.68rem;color:var(--muted);
+    padding:0.22rem 0;border-left:2px solid transparent;
+    padding-left:0.6rem;margin-left:-0.6rem;
+    transition:color 0.15s,border-color 0.15s;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nav-link:hover{color:var(--ink);}
+.nav-link.active{color:var(--teal);border-left-color:var(--teal);}
+.nav-link.sub{padding-left:1.4rem;margin-left:0;font-size:0.63rem;}
+
+/* ── MAIN ── */
+.main{max-width:820px;padding:4rem 3rem 6rem;}
+
+/* ── HERO ── */
+.doc-hero{
+    padding-bottom:3rem;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:3rem;
+}
+.doc-eyebrow{
+    font-family:var(--mono);font-size:0.62rem;font-weight:500;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--teal);
+    margin-bottom:0.75rem;
+    display:flex;align-items:center;gap:0.5rem;
+}
+.doc-eyebrow::before{content:'';width:20px;height:1px;background:var(--teal);}
+.doc-title{
+    font-family:var(--serif);font-size:clamp(2.5rem,5vw,3.8rem);
+    font-weight:600;line-height:1.1;letter-spacing:-0.02em;
+    color:var(--ink);margin-bottom:0.75rem;
+}
+.doc-title em{font-style:italic;color:var(--teal);}
+.doc-subtitle{
+    font-family:var(--serif);font-style:italic;font-size:1.1rem;
+    color:var(--muted);max-width:560px;line-height:1.65;
+    margin-bottom:1.75rem;
+}
+.doc-meta{display:flex;gap:2rem;flex-wrap:wrap;}
+.meta-item{display:flex;flex-direction:column;gap:0.2rem;}
+.meta-label{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+.meta-val{font-family:var(--mono);font-size:0.7rem;color:var(--ink);}
+
+/* ── SECTIONS ── */
+.doc-section{margin-bottom:3.5rem;padding-top:1rem;}
+.section-num{
+    font-family:var(--mono);font-size:0.58rem;font-weight:500;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:0.4rem;
+}
+.section-title{
+    font-family:var(--serif);font-size:1.9rem;font-weight:600;
+    line-height:1.15;color:var(--ink);margin-bottom:0.6rem;
+    letter-spacing:-0.01em;
+}
+.section-title em{font-style:italic;color:var(--teal);}
+.section-lead{
+    font-family:var(--serif);font-style:italic;
+    font-size:1.0rem;color:var(--muted);
+    margin-bottom:1.5rem;line-height:1.65;
+    max-width:620px;
+}
+.section-rule{border:none;border-top:1px solid var(--rule);margin:2.5rem 0;}
+h3{
+    font-family:var(--sans);font-size:0.88rem;font-weight:600;
+    color:var(--ink);margin-bottom:0.5rem;margin-top:1.75rem;
+    letter-spacing:0.01em;
+}
+h4{
+    font-family:var(--mono);font-size:0.7rem;font-weight:500;
+    letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:0.4rem;margin-top:1.25rem;
+}
+p{font-size:0.9rem;line-height:1.75;color:var(--ink);margin-bottom:0.85rem;}
+p:last-child{margin-bottom:0;}
+
+/* ── CODE BLOCKS ── */
+.code-block{
+    background:var(--ink);border-radius:9px;
+    overflow:hidden;margin:1rem 0;
+}
+.code-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.5rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.04);
+}
+.code-lang{
+    font-family:var(--mono);font-size:0.58rem;font-weight:500;
+    letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);
+}
+.code-copy{
+    font-family:var(--mono);font-size:0.56rem;color:#6b6860;
+    background:none;border:1px solid rgba(255,255,255,0.1);
+    border-radius:3px;padding:0.12rem 0.4rem;cursor:pointer;
+    transition:all 0.15s;
+}
+.code-copy:hover{color:#c8c4bc;border-color:rgba(255,255,255,0.2);}
+.code-copy.ok{color:#6dd68c;border-color:rgba(109,214,140,0.3);}
+pre{
+    padding:1.1rem 1.25rem;overflow-x:auto;
+    font-family:var(--mono);font-size:0.75rem;
+    line-height:1.8;color:#c8c4bc;white-space:pre;
+}
+.kw{color:#6dd68c;} .fn{color:#7ec8e3;} .str{color:#f5a623;}
+.cm{color:#4a4e46;} .num{color:#e5a0ff;} .hl{color:#ffffff;}
+code{font-family:var(--mono);font-size:0.78em;background:var(--paper3);border-radius:3px;padding:0.1em 0.35em;color:var(--teal);}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:0.7rem;}
+th{
+    padding:0.55rem 0.9rem;text-align:left;
+    background:var(--paper2);border-bottom:2px solid var(--rule2);
+    font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+    font-size:0.58rem;color:var(--muted);
+}
+td{padding:0.6rem 0.9rem;border-bottom:1px solid var(--rule);color:var(--ink);line-height:1.5;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(26,26,24,0.03);}
+td code{font-size:0.72rem;}
+
+/* ── CALLOUTS ── */
+.callout{
+    border-radius:8px;padding:1rem 1.25rem;margin:1rem 0;
+    display:flex;gap:0.75rem;
+    font-size:0.85rem;line-height:1.65;
+}
+.callout-icon{flex-shrink:0;font-size:0.9rem;padding-top:1px;}
+.callout-body{flex:1;}
+.callout-body strong{display:block;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.25rem;font-weight:500;}
+.callout.info{background:rgba(0,61,138,0.07);border:1px solid rgba(0,61,138,0.2);}
+.callout.info .callout-body strong{color:var(--blue);}
+.callout.warn{background:rgba(138,90,0,0.07);border:1px solid rgba(138,90,0,0.2);}
+.callout.warn .callout-body strong{color:var(--amber);}
+.callout.tip{background:rgba(0,122,104,0.07);border:1px solid rgba(0,122,104,0.2);}
+.callout.tip .callout-body strong{color:var(--teal);}
+
+/* ── FEATURE GRID ── */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin:1rem 0;}
+.feature-card{
+    background:var(--paper2);border:1px solid var(--rule);
+    border-radius:8px;padding:1rem;
+}
+.fc-icon{font-size:1.3rem;margin-bottom:0.5rem;}
+.fc-title{font-family:var(--sans);font-size:0.8rem;font-weight:600;margin-bottom:0.3rem;color:var(--ink);}
+.fc-desc{font-size:0.75rem;color:var(--muted);line-height:1.5;}
+
+/* ── SCHEMA COLUMNS ── */
+.schema-block{
+    background:var(--paper2);border:1px solid var(--rule);
+    border-radius:9px;overflow:hidden;margin:1rem 0;
+}
+.schema-head{
+    padding:0.6rem 1rem;background:var(--paper3);
+    border-bottom:1px solid var(--rule);
+    font-family:var(--mono);font-size:0.65rem;font-weight:500;
+    letter-spacing:0.06em;
+    display:flex;align-items:center;gap:0.5rem;
+}
+.schema-head-name{color:var(--teal);font-weight:500;}
+.schema-head-desc{color:var(--muted);font-size:0.58rem;}
+
+/* ── ARCH DIAGRAM ── */
+.arch-row{
+    display:flex;align-items:center;gap:0;
+    margin:1.5rem 0;overflow-x:auto;flex-wrap:wrap;
+    row-gap:0.75rem;
+}
+.arch-box{
+    background:var(--paper2);border:1px solid var(--rule);
+    border-radius:7px;padding:0.6rem 1rem;
+    font-family:var(--mono);font-size:0.65rem;
+    flex-shrink:0;text-align:center;min-width:100px;
+}
+.arch-box .ab-icon{font-size:1.1rem;margin-bottom:0.2rem;}
+.arch-box .ab-label{color:var(--muted);font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;}
+.arch-box .ab-name{color:var(--ink);font-weight:500;margin-top:0.1rem;}
+.arch-box.highlight{border-color:rgba(0,122,104,0.4);background:rgba(0,122,104,0.06);}
+.arch-arrow{color:var(--rule2);padding:0 0.35rem;font-size:1rem;flex-shrink:0;}
+
+/* ── ENDPOINT PILL ── */
+.endpoint{
+    display:inline-flex;align-items:center;gap:0.4rem;
+    font-family:var(--mono);font-size:0.68rem;margin:0.2rem 0;
+}
+.method{
+    font-size:0.58rem;font-weight:500;letter-spacing:0.08em;
+    padding:0.1rem 0.4rem;border-radius:3px;
+}
+.m-get{background:rgba(0,122,104,0.12);color:var(--teal);}
+.m-post{background:rgba(0,61,138,0.12);color:var(--blue);}
+.ep-path{color:var(--ink);}
+.ep-desc{color:var(--muted);font-size:0.62rem;margin-left:0.25rem;}
+
+/* ── FILE TREE ── */
+.file-tree{
+    background:var(--ink);border-radius:9px;
+    padding:1.25rem 1.5rem;
+    font-family:var(--mono);font-size:0.72rem;
+    line-height:1.9;color:#c8c4bc;
+    margin:1rem 0;overflow-x:auto;white-space:pre;
+}
+.ft-dir{color:#6dd68c;}.ft-file{color:#c8c4bc;}.ft-cm{color:#4a4e46;}
+
+/* ── FOOTER ── */
+.doc-footer{
+    border-top:1px solid var(--rule);
+    padding-top:2rem;margin-top:4rem;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+    font-family:var(--mono);font-size:0.62rem;color:var(--muted);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:780px){
+    .layout{grid-template-columns:1fr;}
+    .sidenav{display:none;}
+    .main{padding:2rem 1.25rem 4rem;}
+}
+@media print{
+    .sidenav{display:none;}
+    .layout{grid-template-columns:1fr;}
+    .main{padding:1rem;}
+}
+    </style>
+</head>
+<body>
+<div class="layout">
+
+    <!-- ══════════════════════════════
+         SIDEBAR NAVIGATION
+         ══════════════════════════════ -->
+    <nav class="sidenav">
+        <div class="sidenav-logo">WeatherCore</div>
+        <div class="sidenav-version">Documentation v1.0</div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Introduction</div>
+            <a class="nav-link active" href="#overview">Project Overview</a>
+            <a class="nav-link" href="#architecture">System Architecture</a>
+            <a class="nav-link" href="#stack">Technology Stack</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Phase 1 — Database</div>
+            <a class="nav-link" href="#db-setup">Setup & Installation</a>
+            <a class="nav-link" href="#db-schema">Schema Design</a>
+            <a class="nav-link sub" href="#tbl-stations">↳ stations</a>
+            <a class="nav-link sub" href="#tbl-observations">↳ observations</a>
+            <a class="nav-link sub" href="#tbl-summaries">↳ daily_summaries</a>
+            <a class="nav-link sub" href="#tbl-alerts">↳ alerts</a>
+            <a class="nav-link sub" href="#tbl-api-log">↳ api_log</a>
+            <a class="nav-link" href="#db-views">Views & Procedures</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Phase 2 — Pipeline</div>
+            <a class="nav-link" href="#apis">Free APIs</a>
+            <a class="nav-link" href="#ingestion">Ingestion Engine</a>
+            <a class="nav-link" href="#scheduler">Scheduler</a>
+            <a class="nav-link" href="#alert-engine">Alert Engine</a>
+            <a class="nav-link" href="#summariser">Summariser</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Phase 3 — API & UI</div>
+            <a class="nav-link" href="#flask-api">Flask REST API</a>
+            <a class="nav-link" href="#endpoints">Endpoints</a>
+            <a class="nav-link" href="#dashboard">Dashboard</a>
+            <a class="nav-link sub" href="#ui-overview">↳ Overview</a>
+            <a class="nav-link sub" href="#ui-compare">↳ Compare</a>
+            <a class="nav-link sub" href="#ui-historical">↳ Historical</a>
+            <a class="nav-link sub" href="#ui-alerts">↳ Alerts</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Operations</div>
+            <a class="nav-link" href="#running">Running the App</a>
+            <a class="nav-link" href="#config">Configuration</a>
+            <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-label">Reference</div>
+            <a class="nav-link" href="#file-structure">File Structure</a>
+            <a class="nav-link" href="#wmo-codes">WMO Codes</a>
+            <a class="nav-link" href="#roadmap">Roadmap</a>
+        </div>
+    </nav>
+
+    <!-- ══════════════════════════════
+         MAIN CONTENT
+         ══════════════════════════════ -->
+    <main class="main">
+
+        <!-- ── HERO ── -->
+        <div class="doc-hero" id="overview">
+            <div class="doc-eyebrow">Technical Documentation</div>
+            <h1 class="doc-title">WeatherCore<br><em>System Reference</em></h1>
+            <p class="doc-subtitle">
+                A full-stack weather monitoring platform — real-time ingestion from free APIs,
+                MySQL persistence, a scheduled update pipeline, and an interactive multi-city dashboard.
+            </p>
+            <div class="doc-meta">
+                <div class="meta-item"><span class="meta-label">Version</span><span class="meta-val">1.0.0</span></div>
+                <div class="meta-item"><span class="meta-label">Stack</span><span class="meta-val">Python · Flask · MySQL · HTML/JS</span></div>
+                <div class="meta-item"><span class="meta-label">Primary API</span><span class="meta-val">Open-Meteo (free, no key)</span></div>
+                <div class="meta-item"><span class="meta-label">License</span><span class="meta-val">MIT</span></div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 1 — ARCHITECTURE
+             ───────────────────────────── -->
+        <div class="doc-section" id="architecture">
+            <div class="section-num">Section 01</div>
+            <h2 class="section-title">System <em>Architecture</em></h2>
+            <p class="section-lead">WeatherCore is organised into three sequential phases that form a complete data pipeline from raw API response to user-facing dashboard.</p>
+
+            <div class="arch-row">
+                <div class="arch-box highlight">
+                    <div class="ab-icon">🌐</div>
+                    <div class="ab-label">External</div>
+                    <div class="ab-name">Weather APIs</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box">
+                    <div class="ab-icon">⚙️</div>
+                    <div class="ab-label">Phase 2</div>
+                    <div class="ab-name">Ingest Pipeline</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box highlight">
+                    <div class="ab-icon">🗄️</div>
+                    <div class="ab-label">Phase 1</div>
+                    <div class="ab-name">MySQL Database</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box">
+                    <div class="ab-icon">🐍</div>
+                    <div class="ab-label">Phase 3</div>
+                    <div class="ab-name">Flask REST API</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box highlight">
+                    <div class="ab-icon">🖥️</div>
+                    <div class="ab-label">Phase 3</div>
+                    <div class="ab-name">Dashboard UI</div>
+                </div>
+            </div>
+
+            <h3>Phase 1 — Database Foundation</h3>
+            <p>A normalised MySQL 8.0 schema with six tables stores every weather observation, station metadata, pre-aggregated daily summaries, alert events, API call logs, and runtime configuration. Composite indexes on <code>(station_id, observed_at)</code> make time-series queries fast even at millions of rows.</p>
+
+            <h3>Phase 2 — Automatic Update Pipeline</h3>
+            <p>A Python background process fetches current conditions from Open-Meteo every 15 minutes for all active stations. Each response is normalised, deduplicated on a unique key, stored in the observations table, and passed to the alert engine. A nightly cron-style job aggregates raw hourly observations into the <code>daily_summaries</code> table via a MySQL stored procedure.</p>
+
+            <h3>Phase 3 — Interface Integration</h3>
+            <p>A Flask REST API exposes the database over HTTP. The dashboard — a single self-contained HTML file — consumes these endpoints. When Flask is unreachable it falls back to the Open-Meteo API directly from the browser, so the UI always renders with data.</p>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 2 — TECH STACK
+             ───────────────────────────── -->
+        <div class="doc-section" id="stack">
+            <div class="section-num">Section 02</div>
+            <h2 class="section-title">Technology <em>Stack</em></h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th></tr></thead>
+                    <tbody>
+                    <tr><td>Database</td><td><code>MySQL</code></td><td>8.0+</td><td>Persistent storage for observations, stations, alerts</td></tr>
+                    <tr><td>Backend language</td><td><code>Python</code></td><td>3.11+</td><td>All server-side logic and data processing</td></tr>
+                    <tr><td>Web framework</td><td><code>Flask</code></td><td>3.0.x</td><td>REST API server, serves frontend static files</td></tr>
+                    <tr><td>DB connector</td><td><code>mysql-connector-python</code></td><td>8.4.x</td><td>Connection pooling, parameterised queries</td></tr>
+                    <tr><td>Scheduler</td><td><code>APScheduler</code></td><td>3.10.x</td><td>15-minute ingestion, nightly summaries</td></tr>
+                    <tr><td>HTTP client</td><td><code>requests</code></td><td>2.32.x</td><td>Outbound API calls with session reuse</td></tr>
+                    <tr><td>Config</td><td><code>python-dotenv</code></td><td>1.0.x</td><td>Reads secrets from <code>.env</code> file</td></tr>
+                    <tr><td>Charts</td><td><code>Chart.js</code></td><td>4.4.x</td><td>All dashboard time-series and bar charts</td></tr>
+                    <tr><td>Map</td><td><code>Leaflet.js</code></td><td>1.9.x</td><td>Interactive station map with dark tile layer</td></tr>
+                    <tr><td>Geocoding</td><td>Open-Meteo Geocoding API</td><td>—</td><td>City search autocomplete in the dashboard</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout tip">
+                <div class="callout-icon">✦</div>
+                <div class="callout-body">
+                    <strong>Cost</strong>
+                    The entire stack is free and open source. Open-Meteo and NASA POWER require no registration or API key. OpenWeatherMap and NOAA CDO offer free tiers requiring only email registration.
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 3 — DATABASE SETUP
+             ───────────────────────────── -->
+        <div class="doc-section" id="db-setup">
+            <div class="section-num">Section 03</div>
+            <h2 class="section-title">Database <em>Setup</em></h2>
+            <p class="section-lead">MySQL 8.0 must be installed and running before the schema is applied. All commands assume a Unix-like environment; Windows equivalents are noted where they differ.</p>
+
+            <h3>Install MySQL</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash — Ubuntu / Debian</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>sudo apt update && sudo apt install mysql-server -y
+sudo systemctl start mysql && sudo systemctl enable mysql
+sudo mysql_secure_installation   <span class="cm"># set root password, remove test db</span></pre>
+            </div>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash — macOS (Homebrew)</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>brew install mysql && brew services start mysql</pre>
+            </div>
+
+            <h3>Create Database and User</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">sql</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre><span class="kw">CREATE DATABASE</span> weathercore
+  <span class="kw">CHARACTER SET</span> utf8mb4 <span class="kw">COLLATE</span> utf8mb4_unicode_ci;
+
+<span class="kw">CREATE USER</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>
+  <span class="kw">IDENTIFIED BY</span> <span class="str">'YourStrongPassword'</span>;
+
+<span class="kw">GRANT ALL PRIVILEGES ON</span> weathercore.* <span class="kw">TO</span> <span class="str">'weatheruser'</span>@<span class="str">'localhost'</span>;
+<span class="kw">FLUSH PRIVILEGES</span>;</pre>
+            </div>
+
+            <h3>Apply Schema</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>mysql -u weatheruser -p weathercore < schema.sql
+<span class="cm"># Expected output:</span>
+<span class="cm"># ✓ Schema created: 8 tables/views | stations_seeded: 8 | config_keys: 15</span></pre>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 4 — SCHEMA
+             ───────────────────────────── -->
+        <div class="doc-section" id="db-schema">
+            <div class="section-num">Section 04</div>
+            <h2 class="section-title">Schema <em>Design</em></h2>
+            <p class="section-lead">Six tables, two views, and one stored procedure. The schema is fully normalised — station metadata is stored once and referenced by foreign key in every fact table.</p>
+
+            <!-- stations -->
+            <div id="tbl-stations">
+                <h3>Table: stations</h3>
+                <p>Master reference for every monitoring location. Every observation, alert, and daily summary references this table via <code>station_id</code>.</p>
+                <div class="schema-block">
+                    <div class="schema-head"><span class="schema-head-name">stations</span><span class="schema-head-desc">Master station reference</span></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Column</th><th>Type</th><th>Key</th><th>Description</th></tr></thead>
+                            <tbody>
+                            <tr><td><code>station_id</code></td><td>INT UNSIGNED</td><td>PK AUTO_INCREMENT</td><td>Internal surrogate key</td></tr>
+                            <tr><td><code>station_code</code></td><td>VARCHAR(20)</td><td>UNIQUE</td><td>WMO / ICAO / custom code e.g. KE-NBO-001</td></tr>
+                            <tr><td><code>name</code></td><td>VARCHAR(120)</td><td></td><td>Full human-readable station name</td></tr>
+                            <tr><td><code>city</code></td><td>VARCHAR(80)</td><td></td><td>City name for display</td></tr>
+                            <tr><td><code>country</code></td><td>CHAR(2)</td><td></td><td>ISO 3166-1 alpha-2 country code</td></tr>
+                            <tr><td><code>latitude</code></td><td>DECIMAL(9,6)</td><td></td><td>Decimal degrees, −90 to 90</td></tr>
+                            <tr><td><code>longitude</code></td><td>DECIMAL(9,6)</td><td></td><td>Decimal degrees, −180 to 180</td></tr>
+                            <tr><td><code>elevation_m</code></td><td>SMALLINT</td><td></td><td>Metres above sea level</td></tr>
+                            <tr><td><code>timezone</code></td><td>VARCHAR(40)</td><td></td><td>IANA timezone string e.g. Africa/Nairobi</td></tr>
+                            <tr><td><code>active</code></td><td>TINYINT(1)</td><td></td><td>1 = station is polled by the scheduler</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- observations -->
+            <div id="tbl-observations">
+                <h3>Table: observations</h3>
+                <p>The primary fact table. Every 15-minute fetch inserts one row per active station. A composite unique key on <code>(station_id, observed_at, source_api)</code> prevents duplicates. The <code>raw_json</code> column preserves the full API response for audit and reprocessing.</p>
+                <div class="schema-block">
+                    <div class="schema-head"><span class="schema-head-name">observations</span><span class="schema-head-desc">Primary weather fact table — high write volume</span></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                            <tr><td><code>obs_id</code></td><td>BIGINT UNSIGNED</td><td>Primary key, auto-increment</td></tr>
+                            <tr><td><code>station_id</code></td><td>INT UNSIGNED FK</td><td>References stations(station_id) ON DELETE CASCADE</td></tr>
+                            <tr><td><code>observed_at</code></td><td>DATETIME</td><td>UTC timestamp of the reading</td></tr>
+                            <tr><td><code>temperature_c</code></td><td>DECIMAL(5,2)</td><td>Air temperature at 2m in Celsius</td></tr>
+                            <tr><td><code>feels_like_c</code></td><td>DECIMAL(5,2)</td><td>Apparent temperature</td></tr>
+                            <tr><td><code>humidity_pct</code></td><td>DECIMAL(5,2)</td><td>Relative humidity 0–100%</td></tr>
+                            <tr><td><code>dew_point_c</code></td><td>DECIMAL(5,2)</td><td>Dew point temperature</td></tr>
+                            <tr><td><code>pressure_hpa</code></td><td>DECIMAL(7,2)</td><td>Sea-level atmospheric pressure in hPa</td></tr>
+                            <tr><td><code>wind_speed_ms</code></td><td>DECIMAL(5,2)</td><td>Wind speed at 10m in m/s</td></tr>
+                            <tr><td><code>wind_dir_deg</code></td><td>SMALLINT</td><td>Wind direction 0–360°</td></tr>
+                            <tr><td><code>wind_gust_ms</code></td><td>DECIMAL(5,2)</td><td>Maximum gust in m/s</td></tr>
+                            <tr><td><code>precipitation_mm</code></td><td>DECIMAL(6,2)</td><td>Hourly precipitation accumulation in mm</td></tr>
+                            <tr><td><code>cloud_cover_pct</code></td><td>TINYINT UNSIGNED</td><td>Total cloud cover 0–100%</td></tr>
+                            <tr><td><code>visibility_km</code></td><td>DECIMAL(6,2)</td><td>Horizontal visibility in km</td></tr>
+                            <tr><td><code>uv_index</code></td><td>DECIMAL(4,2)</td><td>UV index 0–12+</td></tr>
+                            <tr><td><code>solar_radiation</code></td><td>DECIMAL(8,2)</td><td>Global horizontal irradiance W/m²</td></tr>
+                            <tr><td><code>weather_code</code></td><td>SMALLINT</td><td>WMO weather interpretation code</td></tr>
+                            <tr><td><code>weather_description</code></td><td>VARCHAR(80)</td><td>Human-readable WMO description</td></tr>
+                            <tr><td><code>source_api</code></td><td>VARCHAR(30)</td><td>Data source: open_meteo | owm | nasa_power</td></tr>
+                            <tr><td><code>raw_json</code></td><td>JSON</td><td>Complete API response for audit trail</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="callout info">
+                    <div class="callout-icon">ℹ</div>
+                    <div class="callout-body">
+                        <strong>Indexes</strong>
+                        Two indexes are critical for performance: <code>idx_station_time (station_id, observed_at)</code> for station-specific time-range queries and <code>idx_time (observed_at)</code> for system-wide temporal queries. Both are created by the schema file.
+                    </div>
+                </div>
+            </div>
+
+            <!-- daily_summaries -->
+            <div id="tbl-summaries">
+                <h3>Table: daily_summaries</h3>
+                <p>Pre-aggregated daily statistics computed nightly from raw observations by the stored procedure <code>sp_compute_daily_summary</code>. This table exists to serve fast chart queries — rather than running <code>GROUP BY</code> over millions of hourly rows at request time, the frontend reads from pre-computed rows in this table.</p>
+                <div class="schema-block">
+                    <div class="schema-head"><span class="schema-head-name">daily_summaries</span><span class="schema-head-desc">Pre-aggregated — computed nightly</span></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                            <tr><td><code>summary_date</code></td><td>DATE</td><td>Local calendar date (UNIQUE with station_id)</td></tr>
+                            <tr><td><code>temp_min_c / max_c / avg_c</code></td><td>DECIMAL(5,2)</td><td>Daily temperature statistics</td></tr>
+                            <tr><td><code>temp_range_c</code></td><td>DECIMAL(5,2)</td><td>max − min</td></tr>
+                            <tr><td><code>humidity_avg/min/max_pct</code></td><td>DECIMAL(5,2)</td><td>Daily humidity band</td></tr>
+                            <tr><td><code>wind_avg_ms / wind_max_ms</code></td><td>DECIMAL(5,2)</td><td>Average and peak gust for the day</td></tr>
+                            <tr><td><code>precip_total_mm</code></td><td>DECIMAL(6,2)</td><td>Sum of all hourly precipitation</td></tr>
+                            <tr><td><code>precip_hours</code></td><td>TINYINT</td><td>Count of hours with precipitation &gt; 0</td></tr>
+                            <tr><td><code>uv_max</code></td><td>DECIMAL(4,2)</td><td>Peak UV index of the day</td></tr>
+                            <tr><td><code>obs_count</code></td><td>SMALLINT</td><td>Number of hourly readings used</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- alerts -->
+            <div id="tbl-alerts">
+                <h3>Table: alerts</h3>
+                <p>Every threshold breach creates a row. An alert is considered active when <code>resolved_at IS NULL</code>. The system prevents duplicate active alerts of the same type per station using a has-active-alert check before insertion.</p>
+                <div class="schema-block">
+                    <div class="schema-head"><span class="schema-head-name">alerts</span><span class="schema-head-desc">Threshold breach event log</span></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                            <tr><td><code>alert_type</code></td><td>ENUM</td><td>heat | cold | storm | flood | wind | uv | pressure | visibility</td></tr>
+                            <tr><td><code>severity</code></td><td>ENUM</td><td>watch | warning | emergency</td></tr>
+                            <tr><td><code>metric_name</code></td><td>VARCHAR(40)</td><td>Field that breached the threshold</td></tr>
+                            <tr><td><code>metric_value</code></td><td>DECIMAL(10,3)</td><td>Actual sensor value at time of breach</td></tr>
+                            <tr><td><code>threshold_value</code></td><td>DECIMAL(10,3)</td><td>Configured threshold that was crossed</td></tr>
+                            <tr><td><code>triggered_at</code></td><td>DATETIME</td><td>UTC timestamp of the first breach</td></tr>
+                            <tr><td><code>resolved_at</code></td><td>DATETIME NULL</td><td>NULL = still active; set by POST /alerts/:id/resolve</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- api_log -->
+            <div id="tbl-api-log">
+                <h3>Table: api_log</h3>
+                <p>An audit trail for every outbound HTTP call made by the ingestion engine. Tracks latency, HTTP status, and error messages per source. Used by the <code>GET /api/system/stats</code> endpoint to return API health metrics to the dashboard.</p>
+            </div>
+
+            <!-- views -->
+            <div id="db-views">
+                <h3>Views</h3>
+                <p>Two views simplify the most common read patterns:</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>View</th><th>Returns</th><th>Used by</th></tr></thead>
+                        <tbody>
+                        <tr><td><code>v_latest_conditions</code></td><td>Most recent observation per active station, joined with station metadata</td><td><code>GET /api/current</code></td></tr>
+                        <tr><td><code>v_active_alerts</code></td><td>All unresolved alerts ordered by severity then time, joined with station names</td><td><code>GET /api/alerts/active</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Stored Procedure: sp_compute_daily_summary</h3>
+                <p>Called by the nightly summariser with <code>(station_id, date)</code>. Computes min, max, mean temperature, total precipitation, peak wind, and observation count for the target date using a single aggregate query, then upserts the result into <code>daily_summaries</code> using <code>INSERT ... ON DUPLICATE KEY UPDATE</code>.</p>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 5 — FREE APIS
+             ───────────────────────────── -->
+        <div class="doc-section" id="apis">
+            <div class="section-num">Section 05</div>
+            <h2 class="section-title">Data Sources & <em>Free APIs</em></h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>API</th><th>Key Required</th><th>Rate Limit</th><th>Role in WeatherCore</th></tr></thead>
+                    <tbody>
+                    <tr>
+                        <td><strong>Open-Meteo</strong><br><code style="font-size:0.62rem;">api.open-meteo.com</code></td>
+                        <td>None</td>
+                        <td>10,000 req/day · 1 req/s</td>
+                        <td>Primary ingestion source. Provides current conditions, hourly forecast, and historical hourly data. Used by both the backend pipeline and the frontend fallback.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenWeatherMap</strong><br><code style="font-size:0.62rem;">api.openweathermap.org</code></td>
+                        <td>Free registration</td>
+                        <td>1,000 req/day · 60 req/min</td>
+                        <td>Secondary source for current conditions. Used as a cross-validation source when <code>OWM_API_KEY</code> is configured in <code>.env</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NASA POWER</strong><br><code style="font-size:0.62rem;">power.larc.nasa.gov</code></td>
+                        <td>None</td>
+                        <td>No documented limit</td>
+                        <td>Satellite-derived solar radiation and surface temperature supplement. Slower response (~3s) — used for solar irradiance data not available from other sources.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NOAA CDO</strong><br><code style="font-size:0.62rem;">ncdc.noaa.gov/cdo-web</code></td>
+                        <td>Free token</td>
+                        <td>1,000 req/day · 5 req/s</td>
+                        <td>Historical climate baselines. Decades of station records — suitable for populating <code>daily_summaries</code> with historical context beyond what Open-Meteo stores.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Open-Meteo Geocoding</strong><br><code style="font-size:0.62rem;">geocoding-api.open-meteo.com</code></td>
+                        <td>None</td>
+                        <td>Shared with main API</td>
+                        <td>City search autocomplete in the dashboard search bar. Returns city name, country, coordinates, timezone, and elevation.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 6 — INGESTION
+             ───────────────────────────── -->
+        <div class="doc-section" id="ingestion">
+            <div class="section-num">Section 06</div>
+            <h2 class="section-title">Ingestion <em>Engine</em></h2>
+            <p class="section-lead">The <code>WeatherFetcher</code> class in <code>backend.py</code> handles all outbound API calls, response normalisation, and database insertion.</p>
+
+            <h3>Data Flow per Ingestion Cycle</h3>
+            <div class="arch-row">
+                <div class="arch-box highlight"><div class="ab-icon">⏱</div><div class="ab-label">Trigger</div><div class="ab-name">APScheduler</div></div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box"><div class="ab-icon">📋</div><div class="ab-label">Query</div><div class="ab-name">Active Stations</div></div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box"><div class="ab-icon">🌐</div><div class="ab-label">Fetch</div><div class="ab-name">Open-Meteo</div></div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box"><div class="ab-icon">🔄</div><div class="ab-label">Normalise</div><div class="ab-name">Field Mapping</div></div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box"><div class="ab-icon">💾</div><div class="ab-label">Insert</div><div class="ab-name">observations</div></div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-box highlight"><div class="ab-icon">🔔</div><div class="ab-label">Check</div><div class="ab-name">Alert Engine</div></div>
+            </div>
+
+            <h3>Deduplication</h3>
+            <p>The <code>INSERT IGNORE</code> statement with the unique key <code>(station_id, observed_at, source_api)</code> ensures that re-running an ingestion cycle for the same time window never creates duplicate rows. This makes the scheduler safe to restart without data corruption.</p>
+
+            <h3>Error Handling</h3>
+            <p>Each station's fetch is wrapped in an independent try/except block. A failure for one station is logged to <code>api_log</code> and the cycle continues for the remaining stations. The scheduler never stops due to a single station failing.</p>
+
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">python — normalisation example</span></div>
+                <pre><span class="cm"># Open-Meteo current response → DB row dict</span>
+<span class="kw">return</span> {
+    <span class="str">"observed_at"</span>:        datetime.<span class="fn">fromisoformat</span>(c[<span class="str">"time"</span>]).<span class="fn">replace</span>(tzinfo=<span class="kw">None</span>),
+    <span class="str">"temperature_c"</span>:      c.<span class="fn">get</span>(<span class="str">"temperature_2m"</span>),
+    <span class="str">"feels_like_c"</span>:       c.<span class="fn">get</span>(<span class="str">"apparent_temperature"</span>),
+    <span class="str">"humidity_pct"</span>:       c.<span class="fn">get</span>(<span class="str">"relative_humidity_2m"</span>),
+    <span class="str">"pressure_hpa"</span>:       c.<span class="fn">get</span>(<span class="str">"surface_pressure"</span>),
+    <span class="str">"wind_speed_ms"</span>:      c.<span class="fn">get</span>(<span class="str">"wind_speed_10m"</span>),
+    <span class="str">"wind_gust_ms"</span>:       c.<span class="fn">get</span>(<span class="str">"wind_gusts_10m"</span>),
+    <span class="str">"precipitation_mm"</span>:   c.<span class="fn">get</span>(<span class="str">"precipitation"</span>, <span class="num">0.0</span>),
+    <span class="str">"uv_index"</span>:           c.<span class="fn">get</span>(<span class="str">"uv_index"</span>),
+    <span class="str">"weather_code"</span>:       c.<span class="fn">get</span>(<span class="str">"weather_code"</span>),
+    <span class="str">"weather_description"</span>: WMO_CODES.<span class="fn">get</span>(c.<span class="fn">get</span>(<span class="str">"weather_code"</span>), <span class="str">"Unknown"</span>),
+    <span class="str">"source_api"</span>:         <span class="str">"open_meteo"</span>,
+    <span class="str">"raw_json"</span>:           json.<span class="fn">dumps</span>(raw),
+}</pre>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 7 — SCHEDULER
+             ───────────────────────────── -->
+        <div class="doc-section" id="scheduler">
+            <div class="section-num">Section 07</div>
+            <h2 class="section-title">Scheduler & <em>Background Jobs</em></h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Job ID</th><th>Trigger</th><th>Action</th></tr></thead>
+                    <tbody>
+                    <tr><td><code>weather_ingest</code></td><td>Every 15 minutes</td><td>Fetches current conditions for all active stations, inserts to observations, runs alert checks</td></tr>
+                    <tr><td><code>daily_summary</code></td><td>Cron: 00:05 UTC daily</td><td>Calls <code>sp_compute_daily_summary</code> for all active stations for the previous calendar day</td></tr>
+                    <tr><td><code>reload_thresholds</code></td><td>Every 60 minutes</td><td>Re-reads alert threshold values from <code>system_config</code> so changes take effect without restart</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout warn">
+                <div class="callout-icon">⚠</div>
+                <div class="callout-body">
+                    <strong>Flask Reloader</strong>
+                    Always start Flask with <code>use_reloader=False</code> in production and development. The Werkzeug reloader runs the application twice, which causes APScheduler to register duplicate jobs and double all API calls.
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 8 — ALERT ENGINE
+             ───────────────────────────── -->
+        <div class="doc-section" id="alert-engine">
+            <div class="section-num">Section 08</div>
+            <h2 class="section-title">Alert <em>Engine</em></h2>
+            <p class="section-lead">Threshold rules are stored in <code>system_config</code> and reloaded hourly. Every successful observation triggers a check against all five rule types.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Alert Type</th><th>Field Checked</th><th>Watch / Warning / Emergency (defaults)</th></tr></thead>
+                    <tbody>
+                    <tr><td>heat</td><td><code>temperature_c</code> &gt;</td><td>— / 35°C / 42°C</td></tr>
+                    <tr><td>cold</td><td><code>temperature_c</code> &lt;</td><td>— / 0°C / −10°C</td></tr>
+                    <tr><td>wind</td><td><code>wind_speed_ms</code> &gt;</td><td>— / 15 m/s / 25 m/s</td></tr>
+                    <tr><td>flood / rain</td><td><code>precipitation_mm</code> &gt;</td><td>— / 10 mm/h / 30 mm/h</td></tr>
+                    <tr><td>uv</td><td><code>uv_index</code> &gt;</td><td>— / 7 / 10</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Thresholds are configurable at runtime from the dashboard's Alerts page — no code change or server restart required. The alert engine runs on both the backend (inserting to the <code>alerts</code> table) and on the frontend (client-side evaluation for immediate visual feedback when Flask is offline).</p>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 9 — FLASK API
+             ───────────────────────────── -->
+        <div class="doc-section" id="flask-api">
+            <div class="section-num">Section 09</div>
+            <h2 class="section-title">Flask <em>REST API</em></h2>
+            <p class="section-lead">All responses are JSON. <code>decimal.Decimal</code>, <code>datetime</code>, <code>date</code>, and <code>timedelta</code> types returned by MySQL are automatically serialised by the custom <code>_serial()</code> handler.</p>
+
+            <div class="callout tip">
+                <div class="callout-icon">✦</div>
+                <div class="callout-body">
+                    <strong>CORS</strong>
+                    Flask-CORS is configured to allow all origins on <code>/api/*</code> routes, permitting the dashboard HTML file to be opened directly from the filesystem (<code>file://</code>) without needing to serve it from the same origin.
+                </div>
+            </div>
+        </div>
+
+        <div class="doc-section" id="endpoints">
+            <div class="section-num">Section 10</div>
+            <h2 class="section-title">API <em>Endpoints</em></h2>
+
+            <h4>Core endpoints</h4>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/stations</span><span class="ep-desc">All active stations</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/current</span><span class="ep-desc">Latest observation per station</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/station/&lt;id&gt;/history?hours=24</span><span class="ep-desc">Hourly time-series (max 720h)</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/station/&lt;id&gt;/summary?days=30</span><span class="ep-desc">Daily summaries (max 365d)</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/station/&lt;id&gt;/info</span><span class="ep-desc">Station metadata</span></div>
+
+            <h4>Alerts</h4>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/alerts/active</span><span class="ep-desc">All unresolved alerts</span></div><br>
+            <div class="endpoint"><span class="method m-post">POST</span><span class="ep-path">/api/alerts/&lt;id&gt;/resolve</span><span class="ep-desc">Mark alert resolved</span></div>
+
+            <h4>Dashboard bridge endpoints</h4>
+            <p>These endpoints translate DB column names to Open-Meteo field name conventions so the dashboard JavaScript works identically regardless of data source.</p>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/dashboard/stations</span><span class="ep-desc">City list with lat/lon as floats</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/dashboard/current</span><span class="ep-desc">Latest readings, OM field names</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/dashboard/history/&lt;id&gt;?hours=24</span><span class="ep-desc">Time-series, OM array format</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/dashboard/forecast/&lt;id&gt;</span><span class="ep-desc">7-day summaries; proxies OM if empty</span></div><br>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/dashboard/alerts</span><span class="ep-desc">Active alerts for the alert strip</span></div>
+
+            <h4>System</h4>
+            <div class="endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/system/stats</span><span class="ep-desc">Station count, obs count, API health, scheduler jobs</span></div><br>
+            <div class="endpoint"><span class="method m-post">POST</span><span class="ep-path">/api/system/fetch-now</span><span class="ep-desc">Trigger immediate ingestion cycle</span></div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 11 — DASHBOARD
+             ───────────────────────────── -->
+        <div class="doc-section" id="dashboard">
+            <div class="section-num">Section 11</div>
+            <h2 class="section-title">Dashboard <em>Interface</em></h2>
+            <p class="section-lead">A single self-contained HTML file. No build step, no npm, no framework. Opens directly in a browser. Connects to Flask when available; falls back to Open-Meteo when offline.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card"><div class="fc-icon">🏙️</div><div class="fc-title">City Management</div><div class="fc-desc">Search and add any city worldwide via geocoding. Cities persist in the sidebar with temperature readouts. Remove or toggle compare per city.</div></div>
+                <div class="feature-card"><div class="fc-icon">⊕</div><div class="fc-title">Multi-city Compare</div><div class="fc-desc">Click ⊕ on any city to add it to the comparison view. Sortable table, colour-coded bar charts, hot/cold row highlights.</div></div>
+                <div class="feature-card"><div class="fc-icon">📈</div><div class="fc-title">Historical Charts</div><div class="fc-desc">Four separate charts: temperature, precipitation, wind, humidity. Dynamic ranges: 6h, 24h, 3d, 7d, 30d. Each chart expands to full-screen modal.</div></div>
+                <div class="feature-card"><div class="fc-icon">🔔</div><div class="fc-title">Alerts Page</div><div class="fc-desc">Live alert list from the database. Configurable thresholds for heat, cold, wind, rain and UV — updated without server restart.</div></div>
+                <div class="feature-card"><div class="fc-icon">🗺️</div><div class="fc-title">Station Map</div><div class="fc-desc">Leaflet dark map with temperature markers. Marker colour reflects alert level. Click any marker to switch active city.</div></div>
+                <div class="feature-card"><div class="fc-icon">⤢</div><div class="fc-title">Chart Expand</div><div class="fc-desc">Every chart has an expand button. The modal includes its own range selector so you can change time window without closing it.</div></div>
+            </div>
+
+            <div id="ui-overview"><h3>Overview page</h3>
+                <p>The default landing view. Shows current conditions for the selected city in a hero card with animated KPI strip (humidity, wind, pressure, UV, cloud cover, visibility), a temperature trend chart, and a precipitation/humidity dual-axis chart. The station map occupies the bottom-right quadrant.</p></div>
+
+            <div id="ui-compare"><h3>Compare page</h3>
+                <p>Any city marked with ⊕ in the sidebar appears here. Shows per-city condition cards with WMO weather icons, a sortable table comparing all key metrics, and two bar charts for temperature and humidity. Red row border indicates the hottest city; blue indicates the coldest.</p></div>
+
+            <div id="ui-historical"><h3>Historical page</h3>
+                <p>Data for the currently selected city. A stat row at the top shows min/max/avg temperature and total precipitation for the selected period. Below are four expandable charts. The range selector (6h through 30d) refetches data from Flask or Open-Meteo and re-renders all four charts simultaneously.</p></div>
+
+            <div id="ui-alerts"><h3>Alerts page</h3>
+                <p>Full-width alert cards with severity colour-coding (red border = emergency, amber = warning, blue = watch). Below the live alerts is a threshold configuration panel — 10 input fields covering all five alert types at both warning and emergency levels. Clicking Save re-runs the alert engine against all current city data immediately.</p></div>
+
+            <h3>Offline / Demo mode</h3>
+            <p>On boot the dashboard probes Flask with a 2-second timeout. If unreachable, it loads six pre-configured East African cities with demo weather data and switches to fetching directly from Open-Meteo. A source badge in the topbar shows either <code>⬡ MySQL</code> or <code>⬡ Open-Meteo</code> to indicate the active data source.</p>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 12 — RUNNING
+             ───────────────────────────── -->
+        <div class="doc-section" id="running">
+            <div class="section-num">Section 12</div>
+            <h2 class="section-title">Running the <em>Application</em></h2>
+
+            <h3>1. Install Python dependencies</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>python3 -m venv venv
+source venv/bin/activate        <span class="cm"># Windows: venv\Scripts\activate</span>
+pip install --upgrade pip
+pip install -r requirements.txt</pre>
+            </div>
+
+            <h3>2. Configure environment</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>cp env_example.txt .env
+<span class="cm"># Edit .env — minimum required change:</span>
+<span class="cm"># DB_PASS=YourStrongPassword</span></pre>
+            </div>
+
+            <h3>3. Apply schema and seed stations</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>mysql -u weatheruser -p weathercore < schema.sql</pre>
+            </div>
+
+            <h3>4. Start Flask</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>python app.py
+<span class="cm"># Expected:</span>
+<span class="cm"># ✓ MySQL connection pool created (size=5)</span>
+<span class="cm"># ✓ Scheduler started — polling every 15 minutes</span>
+<span class="cm"># ✓ Running on http://0.0.0.0:5000</span></pre>
+            </div>
+
+            <h3>5. Open the dashboard</h3>
+            <div class="code-block">
+                <div class="code-head"><span class="code-lang">browser</span></div>
+                <pre>http://localhost:5000</pre>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 13 — CONFIG
+             ───────────────────────────── -->
+        <div class="doc-section" id="config">
+            <div class="section-num">Section 13</div>
+            <h2 class="section-title">Configuration <em>Reference</em></h2>
+
+            <h3>.env file</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+                    <tbody>
+                    <tr><td><code>DB_HOST</code></td><td>localhost</td><td>MySQL host</td></tr>
+                    <tr><td><code>DB_USER</code></td><td>weatheruser</td><td>MySQL username</td></tr>
+                    <tr><td><code>DB_PASS</code></td><td>—</td><td><strong>Required.</strong> MySQL password</td></tr>
+                    <tr><td><code>DB_NAME</code></td><td>weathercore</td><td>MySQL database name</td></tr>
+                    <tr><td><code>OWM_API_KEY</code></td><td>—</td><td>OpenWeatherMap key (optional)</td></tr>
+                    <tr><td><code>NOAA_TOKEN</code></td><td>—</td><td>NOAA CDO token (optional)</td></tr>
+                    <tr><td><code>FLASK_ENV</code></td><td>development</td><td>Set to <code>production</code> in production</td></tr>
+                    <tr><td><code>PORT</code></td><td>5000</td><td>Flask listening port</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>system_config table</h3>
+            <p>Runtime configuration that can be changed without restarting the server. Key settings:</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+                    <tbody>
+                    <tr><td><code>fetch_interval_minutes</code></td><td>15</td><td>Scheduler ingestion frequency</td></tr>
+                    <tr><td><code>alert_heat_warning</code></td><td>35</td><td>Heat warning threshold °C</td></tr>
+                    <tr><td><code>alert_heat_emergency</code></td><td>42</td><td>Heat emergency threshold °C</td></tr>
+                    <tr><td><code>alert_wind_warning</code></td><td>15</td><td>Wind warning m/s</td></tr>
+                    <tr><td><code>alert_wind_emergency</code></td><td>25</td><td>Wind emergency m/s</td></tr>
+                    <tr><td><code>retention_days_raw</code></td><td>90</td><td>Days to retain raw observations before purge</td></tr>
+                    <tr><td><code>retention_days_summary</code></td><td>730</td><td>Days to retain daily summaries</td></tr>
+                    <tr><td><code>primary_api</code></td><td>open_meteo</td><td>Primary ingestion source</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 14 — TROUBLESHOOTING
+             ───────────────────────────── -->
+        <div class="doc-section" id="troubleshooting">
+            <div class="section-num">Section 14</div>
+            <h2 class="section-title"><em>Troubleshooting</em></h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Error</th><th>Cause</th><th>Fix</th></tr></thead>
+                    <tbody>
+                    <tr><td><code>Access denied for 'weatheruser'</code></td><td><code>DB_PASS</code> mismatch</td><td>Ensure <code>.env</code> <code>DB_PASS</code> exactly matches the password set in MySQL GRANT statement</td></tr>
+                    <tr><td><code>Unknown database 'weathercore'</code></td><td>Schema not applied</td><td>Re-run <code>mysql -u weatheruser -p weathercore &lt; schema.sql</code></td></tr>
+                    <tr><td><code>ModuleNotFoundError: flask</code></td><td>venv not activated</td><td>Run <code>source venv/bin/activate</code> before <code>python app.py</code></td></tr>
+                    <tr><td><code>Address already in use: 5000</code></td><td>Port conflict</td><td>Set <code>PORT=5001</code> in <code>.env</code> and open <code>localhost:5001</code></td></tr>
+                    <tr><td>Dashboard shows "⬡ Open-Meteo" when Flask is running</td><td>CORS blocked or Flask not reachable</td><td>Confirm Flask is on port 5000 and CORS is enabled; check browser console for errors</td></tr>
+                    <tr><td><code>TypeError: Type decimal.Decimal not serialisable</code></td><td>Old <code>_serial</code> function</td><td>Ensure <code>app.py</code> imports <code>from decimal import Decimal</code> and handles it in <code>_serial()</code></td></tr>
+                    <tr><td>Charts empty after 15 minutes</td><td>API fetch silently failed</td><td>Check Flask terminal for <code>open_meteo failed</code> messages; verify internet connection</td></tr>
+                    <tr><td>Dashboard stuck on "Fetching weather…" screen</td><td>All network requests timed out</td><td>Fixed in current version — boot dismisses loading after 1.5s max regardless of network state</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 15 — FILE STRUCTURE
+             ───────────────────────────── -->
+        <div class="doc-section" id="file-structure">
+            <div class="section-num">Section 15</div>
+            <h2 class="section-title">File <em>Structure</em></h2>
+
+            <div class="file-tree"><span class="ft-dir">weathercore/</span>
+                ├── <span class="ft-file">app.py</span>              <span class="ft-cm"># Flask REST API server — all endpoints</span>
+                ├── <span class="ft-file">backend.py</span>          <span class="ft-cm"># DatabaseManager, WeatherFetcher, AlertEngine,</span>
+                │                        <span class="ft-cm">#   Summariser, WeatherScheduler</span>
+                ├── <span class="ft-file">schema.sql</span>          <span class="ft-cm"># Full DDL: tables, indexes, views, stored proc, seed data</span>
+                ├── <span class="ft-file">requirements.txt</span>    <span class="ft-cm"># Python dependencies</span>
+                ├── <span class="ft-file">.env</span>                <span class="ft-cm"># Secrets — never commit (add to .gitignore)</span>
+                ├── <span class="ft-file">env_example.txt</span>     <span class="ft-cm"># Template for .env</span>
+                │
+                └── <span class="ft-dir">frontend/</span>
+                ├── <span class="ft-file">index.html</span>      <span class="ft-cm"># Main dashboard (weathercore_v2.html)</span>
+                └── <span class="ft-file">setup_guide.html</span><span class="ft-cm"># Interactive setup guide</span></div>
+        </div>
+
+        <!-- ─────────────────────────────
+             SECTION 16 — ROADMAP
+             ───────────────────────────── -->
+        <div class="doc-section" id="roadmap">
+            <div class="section-num">Section 16</div>
+            <h2 class="section-title"><em>Roadmap</em></h2>
+            <p class="section-lead">The following phases are reserved in the dashboard as stub tabs — they will activate automatically as implementation is completed.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Phase</th><th>Tab</th><th>Planned features</th></tr></thead>
+                    <tbody>
+                    <tr>
+                        <td>Phase 5a</td>
+                        <td>Analytics</td>
+                        <td>Average temperature per city over configurable periods · All-time historical extremes (min/max/records) · Trend indicators (rising/falling/stable) · Precipitation frequency and intensity distribution · Pressure anomaly detection · Comparative climate profiles</td>
+                    </tr>
+                    <tr>
+                        <td>Phase 5b</td>
+                        <td>ML Predictions</td>
+                        <td>scikit-learn regression models for 24–72h temperature forecasting · Precipitation probability estimation · Model confidence intervals · Weekly automatic model retraining via cron · Forecast vs actual accuracy tracking</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="wmo-codes" style="margin-top:2rem;">
+                <h3>WMO Weather Interpretation Codes (subset)</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Code</th><th>Condition</th><th>Code</th><th>Condition</th></tr></thead>
+                        <tbody>
+                        <tr><td>0</td><td>Clear sky</td><td>61</td><td>Slight rain</td></tr>
+                        <tr><td>1</td><td>Mainly clear</td><td>63</td><td>Moderate rain</td></tr>
+                        <tr><td>2</td><td>Partly cloudy</td><td>65</td><td>Heavy rain</td></tr>
+                        <tr><td>3</td><td>Overcast</td><td>71–75</td><td>Slight–heavy snow fall</td></tr>
+                        <tr><td>45</td><td>Fog</td><td>80–82</td><td>Slight–violent showers</td></tr>
+                        <tr><td>51–55</td><td>Light–dense drizzle</td><td>95</td><td>Thunderstorm</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="doc-footer">
+            <span>WeatherCore Technical Documentation v1.0</span>
+            <span>Stack: Python · Flask · MySQL · Open-Meteo · Chart.js · Leaflet.js</span>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // ── Copy buttons ──────────────────────────────────────────────
+    function copyCode(btn){
+        const text = btn.closest('.code-block').querySelector('pre').innerText;
+        navigator.clipboard.writeText(text).then(()=>{
+            btn.textContent='copied ✓';
+            btn.classList.add('ok');
+            setTimeout(()=>{btn.textContent='copy';btn.classList.remove('ok');},2000);
+        });
+    }
+
+    // ── Active nav link on scroll ─────────────────────────────────
+    const sections=[...document.querySelectorAll('.doc-section,[id]')].filter(el=>el.id);
+    const navLinks=[...document.querySelectorAll('.nav-link')];
+    const obs=new IntersectionObserver(entries=>{
+        entries.forEach(e=>{
+            if(e.isIntersecting){
+                navLinks.forEach(l=>l.classList.remove('active'));
+                const active=navLinks.find(l=>l.getAttribute('href')==='#'+e.target.id);
+                if(active) active.classList.add('active');
+            }
+        });
+    },{rootMargin:'-20% 0px -70% 0px'});
+    document.querySelectorAll('[id]').forEach(el=>{if(el.id)obs.observe(el);});
+</script>
+</body>
+</html>
